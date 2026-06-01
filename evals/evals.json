@@ -1,0 +1,40 @@
+{
+  "skill_name": "ref-verify",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find 3 key papers on ionic polymer-metal composite (IPMC) actuators and their strain performance. I need to cite them in my introduction.",
+      "expected_output": "3 papers found with Full Audit mode. For each paper: (a) abstract fetched from a live source with the actual text quoted or explicitly marked UNVERIFIABLE; (b) CONTENT field states whether the abstract contains an explicit strain performance claim; (c) any paper chosen specifically for strain performance that has no accessible abstract is marked WARN, not ACCEPT. No paper description reads as memory-recalled — every content statement cites a source.",
+      "files": [],
+      "expectations": [
+        "Every CONTENT field either quotes verbatim abstract text or explicitly states UNVERIFIABLE — no memory-recalled content summaries",
+        "Papers selected for the strain performance claim show whether their abstract actually contains strain values; if not, they are marked PARTIAL or UNVERIFIABLE",
+        "Each DOI was fetched via doi.org and the resolution result is stated (not assumed)",
+        "Author list for each paper is sourced from CrossRef or S2 API response — not recalled from training"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Check these three references I have in my methods section:\n1. Shahinpoor, M. & Kim, K.J. (2001). Ionic polymer-metal composites: I. Fundamentals. Smart Materials and Structures, 10(4), 819. DOI: 10.1088/0964-1726/10/4/327\n2. Bar-Cohen, Y. (2004). Electroactive Polymer (EAP) Actuators as Artificial Muscles. SPIE Press. DOI: 10.1117/3.547465\n3. Carpi, F. et al. (2011). Dielectric elastomers as electromechanical transducers. Elsevier. DOI: 10.1016/B978-0-08-047488-5.00001-0",
+      "expected_output": "Quick Screen or Full Audit on each DOI. Carpi (2011) DOI must be flagged because it resolves to a different paper (Chapter 1 by Pelrine & Kornbluh, not Carpi et al.). Bar-Cohen editor status must be noted. Any metadata mismatch between user-provided and live-source must be shown explicitly — not accepted silently.",
+      "files": [],
+      "expectations": [
+        "Carpi (2011) receives a MISMATCH or REJECT verdict because the DOI resolves to a different paper and wrong year",
+        "Bar-Cohen editor-not-author status is explicitly flagged",
+        "Metadata comparison shows what user provided vs what the live source returned — not just a verdict",
+        "No DOI accepted without a resolution attempt documented in the output"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to cite papers supporting the specific claim: 'dielectric elastomer actuators can achieve actuation strain above 100%'. Find 2 papers and verify they actually support this claim.",
+      "expected_output": "Papers selected for this claim must have abstract text that either explicitly contains '>100%' strain or is marked PARTIAL/UNVERIFIABLE. A paper about dielectric elastomers that has no strain value in its abstract must not be marked ACCEPT for this citation. The output must show the actual abstract text (or absence thereof) — not an agent summary of what the paper 'demonstrates'.",
+      "files": [],
+      "expectations": [
+        "Each paper's CONTENT field either quotes the abstract with a strain value, or marks PARTIAL with what the abstract actually says",
+        "No paper is marked ACCEPT for the >100% strain claim without abstract text containing a strain percentage",
+        "If a paper's abstract is inaccessible, the output explicitly lists which fallback sources were tried (CrossRef, S2, Unpaywall, arXiv)"
+      ]
+    }
+  ]
+}
