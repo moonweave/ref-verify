@@ -32,6 +32,66 @@ Works with **Claude Code, Cursor, Codex**, and any agent that supports the `npx 
 
 ---
 
+## Real hallucinations caught during testing
+
+These are not hypothetical examples. These failures were found while evaluating this skill against a real AI agent.
+
+**Case 1 — Content hallucination (not in the abstract)**
+
+We asked an AI agent (without the skill) to find papers on IPMC actuator strain performance. It described Nemat-Nasser (2002) as follows:
+
+> *"Develops the first physics-based micromechanical model explicitly predicting strain distribution and tip displacement... provides the quantitative strain-voltage relationship."*
+
+That description is not in the abstract. We fetched the actual CrossRef raw JSON. The abstract discusses stiffness modeling and ion effects — it does not mention strain distribution predictions or strain-voltage relationships. The agent filled the gap from training memory and presented it as fact.
+
+With `ref-verify`, the same paper gets:
+
+```
+CONTENT: ⚠ Partial
+Abstract (CrossRef verbatim): "A systematic experimental evaluation of the mechanical
+response of both metal-plated and bare Nafion and Flemion in various cation forms and
+various water saturation levels has been performed..."
+→ Abstract does not contain a specific strain value. Verify full text before citing
+  for a quantitative strain claim.
+```
+
+---
+
+**Case 2 — DOI resolves to a completely different paper**
+
+A citation appeared in a reference list as:
+
+> *Carpi, F. et al. (2011). Dielectric elastomers as electromechanical transducers. Elsevier. DOI: 10.1016/B978-0-08-047488-5.00001-0*
+
+We fetched that DOI. It resolves to **Chapter 1** of the edited book — authored by **Ronald Pelrine and Roy Kornbluh**, published in **2008**, not 2011. Carpi et al. are the book editors, not the chapter authors.
+
+The skill verdict:
+
+```
+VERDICT: REJECT
+DOI resolves to different paper. Year: 2011 (provided) vs 2008 (CrossRef).
+Authors: Carpi et al. are editors; chapter authors are Pelrine & Kornbluh.
+Corrected book-level DOI: 10.1016/b978-0-08-047488-5.x0001-9
+```
+
+---
+
+**Case 3 — Right number, wrong meaning (near-miss)**
+
+Searching for papers supporting ">100% actuation strain in dielectric elastomers," the skill found a candidate whose abstract contained "500% strain." That looks strong.
+
+Fetching and reading the abstract: the 500% value is the mechanical **pre-strain level** at which the electric breakdown field was measured — not an actuation output. Citing this paper for "500% actuation strain" would be wrong.
+
+```
+CONTENT: ⚠ Partial
+Abstract contains "500% strain" but this refers to the pre-strain condition
+at which breakdown field (218 MV/m) was measured — not an actuation strain output.
+Abstract does not explicitly report an actuation strain result.
+VERDICT: WARN — does not meet the ACCEPT threshold for this specific claim.
+```
+
+---
+
 ## See it in action
 
 **Finding a paper by description → gets verified before it reaches you:**
