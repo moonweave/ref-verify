@@ -93,6 +93,37 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["verdict"], "PASS")
 
+    def test_verify_doi_normalizes_scheme_less_url_before_fetching(self):
+        record = PaperRecord(
+            doi="10.1000/example",
+            title="Dielectric elastomer actuators",
+            authors=["Pelrine", "Kornbluh"],
+            year=2000,
+            abstract=None,
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "verify-doi",
+                    "doi.org/10.1000/example",
+                    "--title",
+                    "Dielectric elastomer actuators",
+                    "--first-author",
+                    "Pelrine",
+                    "--year",
+                    "2000",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["verdict"], "PASS")
+
     def test_verify_doi_exits_nonzero_when_no_metadata_is_provided(self):
         record = PaperRecord(
             doi="10.1000/example",
@@ -249,6 +280,34 @@ class CliTests(unittest.TestCase):
                     "doi:10.1000/example",
                     "--claim",
                     "actuation strain above 100%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["verdict"], "ACCEPT")
+
+    def test_check_claim_normalizes_scheme_less_dx_url_before_fetching(self):
+        record = PaperRecord(
+            doi="10.1000/example",
+            title="Dielectric elastomer actuators",
+            authors=["Pelrine", "Kornbluh"],
+            year=2000,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "dx.doi.org/10.1000/example",
+                    "--claim",
+                    "actuation strain > 100%",
                     "--json",
                 ],
                 client=FakeClient(record),

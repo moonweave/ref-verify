@@ -62,8 +62,8 @@ def doi_matches(provided: str, fetched: str) -> bool:
 
 
 def normalize_doi(value: str) -> str:
-    normalized = value.strip().lower()
-    normalized = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", normalized)
+    normalized = value.strip().casefold()
+    normalized = re.sub(r"^(?:https?://)?(?:dx\.)?doi\.org/", "", normalized)
     normalized = re.sub(r"^doi:\s*", "", normalized)
     return normalized.strip()
 
@@ -95,7 +95,7 @@ def _numbers(value: str) -> list[str]:
 
 
 def _title_tokens(value: str) -> list[str]:
-    return [_singularize(token) for token in re.findall(r"[a-z0-9]+", value.lower())]
+    return [_singularize(token) for token in re.findall(r"[^\W_]+", value.casefold())]
 
 
 def _singularize(token: str) -> str:

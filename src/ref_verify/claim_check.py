@@ -258,10 +258,14 @@ def _claim_percentage_threshold(claim: str) -> float | None:
 
 def _claim_percentage_comparator(claim: str) -> str:
     normalized = claim.lower()
-    if ">=" in normalized:
+    if ">=" in normalized or "≥" in normalized:
         return "gte"
-    if "<=" in normalized:
+    if "<=" in normalized or "≤" in normalized:
         return "lte"
+    if ">" in normalized:
+        return "gt"
+    if "<" in normalized:
+        return "lt"
     if re.search(r"\b(at least|not less than)\b", normalized):
         return "gte"
     if re.search(r"\b(at most|no more than)\b", normalized):

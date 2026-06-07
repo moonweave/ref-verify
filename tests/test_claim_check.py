@@ -24,6 +24,32 @@ class ClaimCheckTests(unittest.TestCase):
         self.assertEqual(result.verdict, "ACCEPT")
         self.assertIn("117%", result.evidence)
 
+    def test_percentage_claim_parses_symbolic_comparators(self):
+        cases = (
+            ("Actuated strains up to 117% were demonstrated.", "actuation strain > 100%"),
+            ("Actuated strain reached 117%.", "actuation strain >= 100%"),
+            ("Actuated strain reached 117%.", "actuation strain ≥ 100%"),
+            ("Actuated strain remained below 50%.", "actuation strain < 50%"),
+            ("Actuated strain reached 42%.", "actuation strain <= 50%"),
+            ("Actuated strain reached 42%.", "actuation strain ≤ 50%"),
+        )
+
+        for abstract, claim in cases:
+            with self.subTest(claim=claim):
+                record = PaperRecord(
+                    doi="10.1000/symbolic-claim",
+                    title="Symbolic strain actuator",
+                    authors=["Lee"],
+                    year=2020,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, claim)
+
+                self.assertEqual(result.status, "SUPPORTED")
+                self.assertEqual(result.verdict, "ACCEPT")
+
     def test_supported_actuated_strain_even_when_sentence_mentions_prestrained_films(self):
         record = PaperRecord(
             doi="10.1000/science",

@@ -129,6 +129,27 @@ class DoiCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "REJECT")
                 self.assertIn("title", result.mismatches)
 
+    def test_rejects_titles_that_only_differ_by_greek_letter(self):
+        provided = CitationInput(
+            doi="10.1000/phase",
+            title="β-phase PVDF actuators",
+            first_author="Lee",
+            year=2020,
+        )
+        fetched = PaperRecord(
+            doi="10.1000/phase",
+            title="α-phase PVDF actuators",
+            authors=["Lee"],
+            year=2020,
+            abstract=None,
+            source="fixture",
+        )
+
+        result = verify_doi_metadata(provided, fetched)
+
+        self.assertEqual(result.verdict, "REJECT")
+        self.assertIn("title", result.mismatches)
+
     def test_warns_when_only_year_differs(self):
         provided = CitationInput(
             doi="10.1000/example",
