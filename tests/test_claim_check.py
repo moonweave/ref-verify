@@ -166,6 +166,11 @@ class ClaimCheckTests(unittest.TestCase):
             "Actuation strain was 117%, or more.",
             "Actuation strain was 117%; or more.",
             "Actuation strain was 117%: or less.",
+            "Actuation strain was >117%.",
+            "Actuation strain was ≥117%.",
+            "Actuation strain was ≤117%.",
+            "Actuation strain was <117%.",
+            "Actuation strain was 117%+.",
         )
 
         for abstract in cases:
@@ -303,6 +308,14 @@ class ClaimCheckTests(unittest.TestCase):
             (
                 "Actuation strain was 117% or more.",
                 "actuation strain below 200%",
+            ),
+            (
+                "Actuation strain was <117%.",
+                "actuation strain above 100%",
+            ),
+            (
+                "Actuation strain was ≤117%.",
+                "actuation strain above 100%",
             ),
         )
 

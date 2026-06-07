@@ -486,10 +486,22 @@ def _evidence_percentage_comparator(context: str, trailing_text: str = "") -> st
 
     prefix = context[: percentage.start()].lower()
     suffix = f"{context[percentage.end() :]} {trailing_text}".lower()
+    stripped_prefix = prefix.rstrip()
+    stripped_suffix = suffix.lstrip()
+    if stripped_prefix.endswith((">=", "≥")):
+        return "gte"
+    if stripped_prefix.endswith(("<=", "≤")):
+        return "lte"
+    if stripped_prefix.endswith(">"):
+        return "gt"
+    if stripped_prefix.endswith("<"):
+        return "lt"
     if re.search(r"\b(at least|not less than)\s*$", prefix):
         return "gte"
     if re.search(r"\b(at most|no more than)\s*$", prefix):
         return "lte"
+    if stripped_suffix.startswith("+"):
+        return "gte"
     if re.search(r"^\s*[,;:]?\s*(?:or\s+)?(?:more|greater|higher)\b", suffix):
         return "gte"
     if re.search(r"^\s*[,;:]?\s*(?:or\s+)?(?:less|fewer|lower)\b", suffix):
