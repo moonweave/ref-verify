@@ -1,6 +1,6 @@
 import unittest
 
-from ref_verify.doi_check import verify_doi_metadata
+from ref_verify.doi_check import normalize_doi, verify_doi_metadata
 from ref_verify.models import CitationInput, PaperRecord
 
 
@@ -149,6 +149,18 @@ class DoiCheckTests(unittest.TestCase):
 
         self.assertEqual(result.verdict, "REJECT")
         self.assertIn("title", result.mismatches)
+
+    def test_normalizes_pasted_doi_trailing_punctuation(self):
+        cases = (
+            ("10.1000/example.", "10.1000/example"),
+            ("https://doi.org/10.1000/example,", "10.1000/example"),
+            ("DOI: 10.1000/example;", "10.1000/example"),
+            ("doi.org/10.1000/example)", "10.1000/example"),
+        )
+
+        for raw_doi, expected in cases:
+            with self.subTest(raw_doi=raw_doi):
+                self.assertEqual(normalize_doi(raw_doi), expected)
 
     def test_warns_when_only_year_differs(self):
         provided = CitationInput(

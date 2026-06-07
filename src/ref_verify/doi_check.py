@@ -65,7 +65,21 @@ def normalize_doi(value: str) -> str:
     normalized = value.strip().casefold()
     normalized = re.sub(r"^(?:https?://)?(?:dx\.)?doi\.org/", "", normalized)
     normalized = re.sub(r"^doi:\s*", "", normalized)
-    return normalized.strip()
+    return _strip_trailing_doi_punctuation(normalized)
+
+
+def _strip_trailing_doi_punctuation(value: str) -> str:
+    stripped = value.strip()
+    while stripped:
+        without_sentence_punctuation = stripped.rstrip(".,;:")
+        if without_sentence_punctuation != stripped:
+            stripped = without_sentence_punctuation.rstrip()
+            continue
+        if stripped.endswith(")") and stripped.count(")") > stripped.count("("):
+            stripped = stripped[:-1].rstrip()
+            continue
+        return stripped
+    return stripped
 
 
 def _titles_match(provided: str, fetched: str) -> bool:

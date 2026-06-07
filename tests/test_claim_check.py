@@ -50,6 +50,38 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.status, "SUPPORTED")
                 self.assertEqual(result.verdict, "ACCEPT")
 
+    def test_percentage_claim_parses_natural_language_percent(self):
+        cases = (
+            (
+                "Actuated strains up to 117% were demonstrated.",
+                "actuation strain above 100 percent",
+            ),
+            (
+                "Actuated strains up to 117% were demonstrated.",
+                "DEAs reach over 100 percent strain",
+            ),
+            (
+                "Actuated strain reached 117 per cent.",
+                "actuation strain > 100%",
+            ),
+        )
+
+        for abstract, claim in cases:
+            with self.subTest(claim=claim):
+                record = PaperRecord(
+                    doi="10.1000/natural-percent",
+                    title="Natural percent actuator",
+                    authors=["Lee"],
+                    year=2020,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, claim)
+
+                self.assertEqual(result.status, "SUPPORTED")
+                self.assertEqual(result.verdict, "ACCEPT")
+
     def test_supported_actuated_strain_even_when_sentence_mentions_prestrained_films(self):
         record = PaperRecord(
             doi="10.1000/science",

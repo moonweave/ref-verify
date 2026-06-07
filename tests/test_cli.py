@@ -318,6 +318,34 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "SUPPORTED")
         self.assertEqual(payload["verdict"], "ACCEPT")
 
+    def test_check_claim_accepts_natural_language_percent_claim(self):
+        record = PaperRecord(
+            doi="10.1000/example",
+            title="Dielectric elastomer actuators",
+            authors=["Pelrine", "Kornbluh"],
+            year=2000,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/example",
+                    "--claim",
+                    "actuation strain over 100 per cent",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["verdict"], "ACCEPT")
+
     def test_check_claim_exits_nonzero_when_fetched_doi_differs(self):
         record = PaperRecord(
             doi="10.1000/other",

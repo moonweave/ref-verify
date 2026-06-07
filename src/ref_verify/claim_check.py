@@ -5,7 +5,11 @@ import re
 from ref_verify.models import ClaimSupportResult, PaperRecord
 
 _PERCENTAGE_VALUE_PATTERN = r"\d+(?:,\d{3})*(?:\.\d+)?"
-_PERCENTAGE_PATTERN = re.compile(rf"(?<![\d,])({_PERCENTAGE_VALUE_PATTERN})\s*%")
+_PERCENTAGE_UNIT_PATTERN = r"(?:%|\bpercent\b|\bper\s+cent\b)"
+_PERCENTAGE_PATTERN = re.compile(
+    rf"(?<![\d,])({_PERCENTAGE_VALUE_PATTERN})\s*{_PERCENTAGE_UNIT_PATTERN}",
+    re.IGNORECASE,
+)
 
 _STOPWORDS = {
     "a",
