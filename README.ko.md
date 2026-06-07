@@ -181,7 +181,7 @@ ref-verify check-claim <doi> --claim "<specific claim>" --json
 **이미 가진 인용 확인**
 
 ```text
-User: "verify these 3 citations before I submit"
+사용자: "제출 전에 이 인용 3개를 검증해줘"
 
 Shahinpoor & Kim (2001) 10.1088/0964-1726/10/4/327 - PASS
 Bar-Cohen (2004)        10.1117/3.547465            - WARN  (listed as author; CrossRef: editor)
@@ -191,15 +191,15 @@ Carpi et al. (2011)     10.1016/B978-0-08-047488-5.00001-0 - REJECT
 **특정 주장 확인**
 
 ```text
-User: "does the Pelrine 2000 paper actually say DEAs reach over 100% strain?"
+사용자: "Pelrine 2000 논문이 DEA가 100% 넘는 strain에 도달한다고 실제로 말해?"
 
-CONTENT: Supported
+내용: 뒷받침됨
 "Actuated strains up to 117% were demonstrated with silicone elastomers,
 and up to 215% with acrylic elastomers."
-[Source: CrossRef raw JSON, not recalled from memory]
+[출처: CrossRef raw JSON, 기억에서 가져온 설명 아님]
 ```
 
-**Near-miss citation**
+**Near-miss 인용**
 
 후보 논문 abstract에 "500% strain"이 들어 있어도, 그 숫자가 actuation
 result가 아니라 pre-strain condition일 수 있습니다. `ref-verify`는 이런

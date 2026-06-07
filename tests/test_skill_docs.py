@@ -123,6 +123,19 @@ class SkillDocsTests(unittest.TestCase):
         self.assertNotIn("현재 구현은 의도적으로", readme_ko)
         self.assertNotIn("논문이 실제로 말하지 않은 내용을 인용하지 않게 막습니다", readme_ko)
 
+    def test_korean_readme_localizes_user_facing_examples(self):
+        readme_ko = (REPO_ROOT / "README.ko.md").read_text(encoding="utf-8")
+        examples = readme_ko.split("## 예시", 1)[1]
+
+        self.assertIn("사용자:", examples)
+        self.assertIn("내용: 뒷받침됨", examples)
+        self.assertIn("출처:", examples)
+        self.assertIn("Near-miss 인용", examples)
+        self.assertNotIn("User:", examples)
+        self.assertNotIn("CONTENT:", examples)
+        self.assertNotIn("[Source:", examples)
+        self.assertNotIn("**Near-miss citation**", examples)
+
     def test_source_checkout_module_subcommands_are_runnable(self):
         env = os.environ.copy()
         env["PYTHONPATH"] = str(REPO_ROOT / "src")
