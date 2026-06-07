@@ -27,9 +27,9 @@ Works with **Claude Code, Cursor, Codex**, and any agent that supports the `npx 
 
 ### Optional executable engine
 
-The skill is the agent workflow. The Python CLI is the reproducible execution engine that the skill, future MCP server, and future Zotero workflows can call.
+The skill is the agent workflow. The Python CLI is the skill-level execution engine that the installed skill can call from a terminal before falling back to the manual protocol.
 
-Current CLI scope: CrossRef-backed DOI metadata checks and CrossRef-abstract claim checks. If CrossRef does not expose an abstract, `check-claim` returns `UNVERIFIABLE`; the agent skill can still continue with the manual Semantic Scholar, Unpaywall, arXiv, and PubMed fallback protocol.
+No MCP server is required for this workflow. Current CLI scope is CrossRef-backed DOI metadata checks and CrossRef-abstract claim checks. If CrossRef does not expose an abstract, `check-claim` returns `UNVERIFIABLE`; the agent skill can still continue with the manual Semantic Scholar, Unpaywall, arXiv, and PubMed fallback protocol.
 
 ```bash
 git clone https://github.com/Moonweave-Research/ref-verify.git
@@ -42,6 +42,18 @@ tree on `PYTHONPATH`:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
+
+Check whether the CLI is available:
+
+```bash
+ref-verify --help
+```
+
+When working from a source checkout before installation, use:
+
+```bash
+PYTHONPATH=src python3 -m ref_verify.cli --help
 ```
 
 Then run focused checks directly:
