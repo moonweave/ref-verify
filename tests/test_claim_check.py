@@ -252,6 +252,29 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "WARN")
                 self.assertIn("does not explicitly support", result.reason)
 
+    def test_percentage_claim_rejects_reporting_and_negation_frames(self):
+        cases = (
+            "We investigated whether actuation strain above 100% was achievable.",
+            "It is not true that actuation strain exceeded 117% in this material.",
+        )
+
+        for abstract in cases:
+            with self.subTest(abstract=abstract):
+                record = PaperRecord(
+                    doi="10.1000/reporting-percentage",
+                    title="Reporting frame actuator",
+                    authors=["Lee"],
+                    year=2020,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, "actuation strain above 100%")
+
+                self.assertEqual(result.status, "PARTIAL")
+                self.assertEqual(result.verdict, "WARN")
+                self.assertIn("does not explicitly support", result.reason)
+
     def test_supported_when_non_percentage_claim_is_stated_in_abstract(self):
         record = PaperRecord(
             doi="10.1000/lifetime",
@@ -311,12 +334,38 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertIn("does not explicitly support", result.reason)
 
     def test_non_percentage_claim_rejects_reporting_frame(self):
+        cases = (
+            "We tested whether the device lifetime was 5000 cycles.",
+            (
+                "We investigated whether, under standard conditions and after "
+                "annealing, the device lifetime was 5000 cycles."
+            ),
+        )
+
+        for abstract in cases:
+            with self.subTest(abstract=abstract):
+                record = PaperRecord(
+                    doi="10.1000/reporting",
+                    title="Hydrogel actuator lifetime",
+                    authors=["Lee"],
+                    year=2022,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, "the device lifetime was 5000 cycles")
+
+                self.assertEqual(result.status, "PARTIAL")
+                self.assertEqual(result.verdict, "WARN")
+                self.assertIn("does not explicitly support", result.reason)
+
+    def test_non_percentage_claim_rejects_delayed_comparative_suffix(self):
         record = PaperRecord(
-            doi="10.1000/reporting",
+            doi="10.1000/delayed-comparative",
             title="Hydrogel actuator lifetime",
             authors=["Lee"],
             year=2022,
-            abstract="We tested whether the device lifetime was 5000 cycles.",
+            abstract="The device lifetime was 5000 cycles, significantly longer after annealing.",
             source="fixture",
         )
 

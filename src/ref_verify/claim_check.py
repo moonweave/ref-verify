@@ -51,6 +51,14 @@ _TEXT_CLAIM_COMPARATIVE_SUFFIXES = {
     "than",
 }
 
+_UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
+    r"\bwhether\b",
+    r"\bif\b",
+    r"\bnot true that\b",
+    r"\bachievable\b",
+    r"\bpossible\b",
+)
+
 
 def check_claim_support(record: PaperRecord, claim: str) -> ClaimSupportResult:
     if not record.abstract:
@@ -174,6 +182,8 @@ def _sentence_supports_percentage_claim(
     for value, context in _percentage_contexts(sentence):
         if _mentions_prestrain_context(context):
             continue
+        if _has_unsupported_claim_frame(context):
+            continue
         if not _has_actuation_strain_context(context, claim):
             continue
         evidence_comparator = _evidence_percentage_comparator(context)
@@ -231,7 +241,7 @@ def _sentence_supports_text_claim(sentence: str, claim: str) -> bool:
 
     for start in _token_sequence_offsets(sentence_tokens, claim_tokens):
         end = start + len(claim_tokens)
-        if _has_reporting_frame(sentence_tokens, start):
+        if _has_unsupported_claim_frame(sentence):
             continue
         if _has_comparative_suffix(sentence_tokens, end):
             continue
@@ -337,23 +347,22 @@ def _token_sequence_offsets(tokens: list[str], target: list[str]) -> list[int]:
     ]
 
 
-def _has_reporting_frame(tokens: list[str], claim_start: int) -> bool:
-    prefix = tokens[max(0, claim_start - 6) : claim_start]
-    return "whether" in prefix or "if" in prefix
+def _has_unsupported_claim_frame(value: str) -> bool:
+    normalized = " ".join(_phrase_tokens(value))
+    return any(
+        re.search(pattern, normalized)
+        for pattern in _UNSUPPORTED_CLAIM_FRAME_PATTERNS
+    )
 
 
 def _has_comparative_suffix(tokens: list[str], claim_end: int) -> bool:
     if claim_end >= len(tokens):
         return False
 
-    next_token = tokens[claim_end]
-    if next_token in _TEXT_CLAIM_COMPARATIVE_SUFFIXES:
+    suffix = tokens[claim_end:]
+    if any(token in _TEXT_CLAIM_COMPARATIVE_SUFFIXES for token in suffix):
         return True
-    return (
-        next_token == "or"
-        and claim_end + 1 < len(tokens)
-        and tokens[claim_end + 1] in {"less", "more"}
-    )
+    return False
 
 
 def _stem(token: str) -> str:
