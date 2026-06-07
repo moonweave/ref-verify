@@ -11,7 +11,7 @@ def verify_doi_metadata(
 ) -> MetadataCheckResult:
     mismatches: list[str] = []
 
-    if provided.doi and not _doi_matches(provided.doi, fetched.doi):
+    if provided.doi and not doi_matches(provided.doi, fetched.doi):
         mismatches.append("doi")
 
     if not _has_comparison_metadata(provided):
@@ -57,7 +57,7 @@ def _has_comparison_metadata(provided: CitationInput) -> bool:
     return bool(provided.title and provided.first_author)
 
 
-def _doi_matches(provided: str, fetched: str) -> bool:
+def doi_matches(provided: str, fetched: str) -> bool:
     return _normalize_doi(provided) == _normalize_doi(fetched)
 
 

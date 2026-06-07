@@ -18,6 +18,17 @@ class FakeClient:
         return self.record
 
 
+class MismatchedDoiClient:
+    def __init__(self, requested_doi, record):
+        self.requested_doi = requested_doi
+        self.record = record
+
+    def fetch_work(self, doi):
+        if doi != self.requested_doi:
+            raise AssertionError("unexpected doi")
+        return self.record
+
+
 class CliTests(unittest.TestCase):
     def test_verify_doi_outputs_machine_readable_json(self):
         record = PaperRecord(
@@ -188,6 +199,35 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["status"], "SUPPORTED")
         self.assertEqual(payload["verdict"], "ACCEPT")
+
+    def test_check_claim_exits_nonzero_when_fetched_doi_differs(self):
+        record = PaperRecord(
+            doi="10.1000/other",
+            title="Different paper",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/requested",
+                    "--claim",
+                    "actuation strain above 100%",
+                    "--json",
+                ],
+                client=MismatchedDoiClient("10.1000/requested", record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "UNVERIFIABLE")
+        self.assertEqual(payload["verdict"], "WARN")
+        self.assertEqual(payload["paper"]["doi"], "10.1000/other")
 
     def test_check_claim_exits_nonzero_when_claim_is_partial(self):
         record = PaperRecord(

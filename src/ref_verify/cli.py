@@ -7,8 +7,8 @@ from typing import Sequence
 
 from ref_verify.claim_check import check_claim_support
 from ref_verify.crossref import CrossrefClient
-from ref_verify.doi_check import verify_doi_metadata
-from ref_verify.models import CitationInput
+from ref_verify.doi_check import doi_matches, verify_doi_metadata
+from ref_verify.models import CitationInput, ClaimSupportResult
 
 
 def main(
@@ -70,6 +70,17 @@ def _verify_doi(args: argparse.Namespace, client: CrossrefClient) -> int:
 
 def _check_claim(args: argparse.Namespace, client: CrossrefClient) -> int:
     fetched = client.fetch_work(args.doi)
+    if not doi_matches(args.doi, fetched.doi):
+        result = ClaimSupportResult(
+            status="UNVERIFIABLE",
+            verdict="WARN",
+            reason="Fetched DOI does not match the requested DOI.",
+            evidence="",
+            paper=fetched,
+            claim=args.claim,
+        )
+        _emit(result.to_dict(), as_json=args.json)
+        return 2
     result = check_claim_support(fetched, args.claim)
     _emit(result.to_dict(), as_json=args.json)
     return 0 if result.verdict == "ACCEPT" else 2
