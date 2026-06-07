@@ -6,6 +6,8 @@
 
 # ref-verify
 
+[English](README.md) | [한국어](README.ko.md)
+
 **Stop citing papers that don't say what you think they say.**
 
 You asked your AI agent to find papers. The DOIs look plausible. The author names sound right. The quotes feel accurate. But some of them are wrong — and you won't find out until a reviewer does.

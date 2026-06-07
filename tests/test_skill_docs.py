@@ -35,6 +35,7 @@ class SkillDocsTests(unittest.TestCase):
     def test_readme_positions_cli_as_skill_execution_engine_not_mcp(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
+        self.assertIn("[한국어](README.ko.md)", readme)
         self.assertIn("agent skill for citation verification", readme)
         self.assertIn("skill/plugin-level", readme)
         self.assertIn("skill-level execution engine", readme)
@@ -45,6 +46,18 @@ class SkillDocsTests(unittest.TestCase):
         self.assertIn("python3 -m ref_verify.cli verify-doi", readme)
         self.assertIn("python3 -m ref_verify.cli check-claim", readme)
         self.assertNotIn("future MCP", readme)
+
+    def test_korean_readme_matches_current_workflow_positioning(self):
+        readme_ko = (REPO_ROOT / "README.ko.md").read_text(encoding="utf-8")
+
+        self.assertIn("[English](README.md)", readme_ko)
+        self.assertIn("연구 인용 검증용 에이전트 스킬", readme_ko)
+        self.assertIn("스킬/플러그인 수준", readme_ko)
+        self.assertIn("MCP 서버가 필요하지 않습니다", readme_ko)
+        self.assertIn("ref-verify verify-doi", readme_ko)
+        self.assertIn("ref-verify check-claim", readme_ko)
+        self.assertIn("README.ko.md", readme_ko)
+        self.assertIn("SKILL.md", readme_ko)
 
     def test_source_checkout_module_subcommands_are_runnable(self):
         env = os.environ.copy()
