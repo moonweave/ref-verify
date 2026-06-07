@@ -70,6 +70,21 @@ ref-verify check-claim 10.1126/science.287.5454.836 \
   --json
 ```
 
+From an uninstalled source checkout, run the same checks through the module
+entrypoint:
+
+```bash
+PYTHONPATH=src python3 -m ref_verify.cli verify-doi 10.1126/science.287.5454.836 \
+  --title "High-Speed Electrically Actuated Elastomers with Strain Greater Than 100%" \
+  --first-author Pelrine \
+  --year 2000 \
+  --json
+
+PYTHONPATH=src python3 -m ref_verify.cli check-claim 10.1126/science.287.5454.836 \
+  --claim "actuation strain above 100%" \
+  --json
+```
+
 ---
 
 ## What gets caught

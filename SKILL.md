@@ -76,6 +76,16 @@ ref-verify verify-doi <doi> \
   --json
 ```
 
+Source-checkout fallback:
+
+```bash
+PYTHONPATH=src python3 -m ref_verify.cli verify-doi <doi> \
+  --title "<provided title>" \
+  --first-author <provided-first-author-last-name> \
+  --year <provided-year> \
+  --json
+```
+
 `verify-doi` exits `0` only for `PASS`; `WARN` and `REJECT` return non-zero.
 Supplying only a DOI checks that CrossRef resolves but is not enough to pass
 metadata verification.
@@ -93,6 +103,12 @@ Single claim check against a DOI abstract:
 
 ```bash
 ref-verify check-claim <doi> --claim "<specific factual claim>" --json
+```
+
+Source-checkout fallback:
+
+```bash
+PYTHONPATH=src python3 -m ref_verify.cli check-claim <doi> --claim "<specific factual claim>" --json
 ```
 
 Route the result:

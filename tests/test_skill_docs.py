@@ -1,4 +1,7 @@
 from pathlib import Path
+import os
+import subprocess
+import sys
 import unittest
 
 
@@ -13,6 +16,8 @@ class SkillDocsTests(unittest.TestCase):
             "CLI Availability Check",
             "ref-verify --help",
             "python3 -m ref_verify.cli --help",
+            "python3 -m ref_verify.cli verify-doi",
+            "python3 -m ref_verify.cli check-claim",
             "CLI-first workflow",
             "verify-doi",
             "check-claim",
@@ -33,7 +38,32 @@ class SkillDocsTests(unittest.TestCase):
         self.assertIn("skill-level execution engine", readme)
         self.assertIn("No MCP server is required for this workflow", readme)
         self.assertIn("ref-verify --help", readme)
+        self.assertIn("python3 -m ref_verify.cli verify-doi", readme)
+        self.assertIn("python3 -m ref_verify.cli check-claim", readme)
         self.assertNotIn("future MCP", readme)
+
+    def test_source_checkout_module_subcommands_are_runnable(self):
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(REPO_ROOT / "src")
+
+        commands = (
+            [sys.executable, "-m", "ref_verify.cli", "verify-doi", "--help"],
+            [sys.executable, "-m", "ref_verify.cli", "check-claim", "--help"],
+        )
+
+        for command in commands:
+            with self.subTest(command=" ".join(command)):
+                result = subprocess.run(
+                    command,
+                    cwd=REPO_ROOT,
+                    env=env,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("usage: ref-verify", result.stdout)
 
 
 if __name__ == "__main__":
