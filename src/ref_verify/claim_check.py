@@ -91,8 +91,14 @@ _UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
     r"\bif\b",
     r"\bnot true that\b",
     r"\bfalse that\b",
+    r"\bcannot\b",
+    r"\bcan not\b",
+    r"\bcould not\b",
     r"\b(?:did|do|does|is|are|was|were|has|have|had) not\b",
     r"\b(?:didn t|don t|doesn t|isn t|aren t|wasn t|weren t)\b",
+    r"\b(?:fail|fails|failed) to\b",
+    r"\bunable to\b",
+    r"\bwithout\b",
     r"\bnever\b",
     r"\bno "
     r"(?:sample|samples|specimen|specimens|device|devices|case|cases|paper|papers|study|studies)\b",
@@ -228,11 +234,15 @@ def _sentence_supports_percentage_claim(
 ) -> bool:
     if _has_unsupported_claim_frame(sentence):
         return False
+    if _has_sentence_scope_prefix(sentence):
+        return False
     contexts = _percentage_contexts(sentence)
     for index, (value, context) in enumerate(contexts):
         if _mentions_prestrain_context(context):
             continue
         if _has_unsupported_claim_frame(context):
+            continue
+        if _has_percentage_scope_suffix(context):
             continue
         if not _has_actuation_strain_context(context, claim):
             continue
@@ -389,6 +399,8 @@ def _sentence_supports_text_claim(sentence: str, claim: str) -> bool:
         end = start + len(claim_tokens)
         if _has_unsupported_claim_frame(sentence):
             continue
+        if _has_scope_qualifier_prefix(sentence_tokens, start):
+            continue
         if _has_comparative_suffix(sentence_tokens, end):
             continue
         return True
@@ -428,6 +440,19 @@ def _evidence_percentage_comparator(context: str) -> str:
     ):
         return "gt"
     return "exact"
+
+
+def _has_sentence_scope_prefix(value: str) -> bool:
+    tokens = _phrase_tokens(value)
+    return bool(tokens) and tokens[0] in _TEXT_CLAIM_SCOPE_SUFFIXES
+
+
+def _has_percentage_scope_suffix(context: str) -> bool:
+    percentage = re.search(r"\d+(?:\.\d+)?\s*%", context)
+    if not percentage:
+        return False
+    suffix_tokens = _phrase_tokens(context[percentage.end() :])
+    return any(token in _TEXT_CLAIM_SCOPE_SUFFIXES for token in suffix_tokens)
 
 
 def _clause_bounds(value: str, start: int, end: int) -> tuple[int, int]:
@@ -513,6 +538,11 @@ def _has_comparative_suffix(tokens: list[str], claim_end: int) -> bool:
     if any(token in _TEXT_CLAIM_SCOPE_SUFFIXES for token in suffix):
         return True
     return False
+
+
+def _has_scope_qualifier_prefix(tokens: list[str], claim_start: int) -> bool:
+    prefix = tokens[:claim_start]
+    return any(token in _TEXT_CLAIM_SCOPE_SUFFIXES for token in prefix)
 
 
 def _stem(token: str) -> str:

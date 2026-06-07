@@ -104,7 +104,7 @@ class ClaimCheckTests(unittest.TestCase):
             title="Boundary strain actuator",
             authors=["Lee"],
             year=2020,
-            abstract="Actuated strain reached 50% under the tested voltage.",
+            abstract="Actuated strain reached 50% at the tested voltage.",
             source="fixture",
         )
 
@@ -122,7 +122,7 @@ class ClaimCheckTests(unittest.TestCase):
             title="Low strain actuator",
             authors=["Lee"],
             year=2020,
-            abstract="Actuated strain reached 42% under the tested voltage.",
+            abstract="Actuated strain reached 42% at the tested voltage.",
             source="fixture",
         )
 
@@ -138,7 +138,7 @@ class ClaimCheckTests(unittest.TestCase):
             title="Exact strain actuator",
             authors=["Lee"],
             year=2020,
-            abstract="Actuated strain reached 50% under the tested voltage.",
+            abstract="Actuated strain reached 50% at the tested voltage.",
             source="fixture",
         )
         different_record = PaperRecord(
@@ -146,7 +146,7 @@ class ClaimCheckTests(unittest.TestCase):
             title="Different strain actuator",
             authors=["Lee"],
             year=2020,
-            abstract="Actuated strain reached 60% under the tested voltage.",
+            abstract="Actuated strain reached 60% at the tested voltage.",
             source="fixture",
         )
 
@@ -250,7 +250,7 @@ class ClaimCheckTests(unittest.TestCase):
                 "actuation strain at least 45%",
             ),
             (
-                "Actuated strain reached at most 50% under the tested voltage.",
+                "Actuated strain reached at most 50% at the tested voltage.",
                 "actuation strain above 49%",
             ),
         )
@@ -296,11 +296,44 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "WARN")
                 self.assertIn("does not explicitly support", result.reason)
 
+    def test_percentage_claim_rejects_scope_qualified_context(self):
+        cases = (
+            ("Before treatment, actuation strain exceeded 117%.", "actuation strain above 100%"),
+            (
+                "Under standard conditions, actuation strain exceeded 117%.",
+                "actuation strain above 100%",
+            ),
+            ("After annealing, actuation strain remained below 50%.", "actuation strain below 50%"),
+            ("Actuation strain was below 50% before treatment.", "actuation strain below 50%"),
+        )
+
+        for abstract, claim in cases:
+            with self.subTest(abstract=abstract):
+                record = PaperRecord(
+                    doi="10.1000/scoped-percentage",
+                    title="Scoped percentage actuator",
+                    authors=["Lee"],
+                    year=2020,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, claim)
+
+                self.assertEqual(result.status, "PARTIAL")
+                self.assertEqual(result.verdict, "WARN")
+                self.assertIn("does not explicitly support", result.reason)
+
     def test_percentage_claim_rejects_reporting_and_negation_frames(self):
         cases = (
             "We investigated whether actuation strain above 100% was achievable.",
             "It is not true that actuation strain exceeded 117% in this material.",
             "Actuation strain did not exceed 117% in any sample.",
+            "Actuation strain cannot exceed 117% in this material.",
+            "Actuation strain could not exceed 117% in this material.",
+            "Actuation strain failed to exceed 117% in this material.",
+            "Actuation strain was unable to exceed 117% in this material.",
+            "Actuation strain was measured without exceeding 117%.",
             "Actuation strain exceeded 117% in no sample.",
             "No sample showed actuation strain above 100%.",
             "None of the samples showed actuation strain above 100%.",
@@ -431,6 +464,9 @@ class ClaimCheckTests(unittest.TestCase):
 
     def test_non_percentage_claim_rejects_scope_qualifier_suffix(self):
         cases = (
+            "Before treatment, healthy cells are stiffer than cancer cells.",
+            "After annealing, the device lifetime was 5000 cycles.",
+            "Under standard conditions, the device lifetime was 5000 cycles.",
             (
                 "The device lifetime was 5000 cycles before annealing and "
                 "1000 cycles after annealing."
@@ -439,6 +475,9 @@ class ClaimCheckTests(unittest.TestCase):
             "Healthy cells are stiffer than cancer cells, but only before treatment.",
         )
         claims = (
+            "healthy cells are stiffer than cancer cells",
+            "the device lifetime was 5000 cycles",
+            "the device lifetime was 5000 cycles",
             "the device lifetime was 5000 cycles",
             "the device lifetime was 5000 cycles",
             "healthy cells are stiffer than cancer cells",
