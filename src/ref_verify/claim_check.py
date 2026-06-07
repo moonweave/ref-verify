@@ -188,6 +188,10 @@ def _evidence_entails_claim(
     threshold: float,
     claim_comparator: str,
 ) -> bool:
+    if evidence_comparator == "up_to":
+        if claim_comparator == "exact":
+            return False
+        return _compare_percentage(value, threshold, claim_comparator)
     if evidence_comparator == "lt":
         return claim_comparator in {"lt", "lte"} and value <= threshold
     if evidence_comparator == "lte":
@@ -258,6 +262,8 @@ def _evidence_percentage_comparator(context: str) -> str:
         return "gte"
     if re.search(r"\b(at most|no more than)\s*$", prefix):
         return "lte"
+    if re.search(r"\bup to\s*$", prefix):
+        return "up_to"
     if re.search(r"\b(below|under|less than)\s*$", prefix):
         return "lt"
     if re.search(

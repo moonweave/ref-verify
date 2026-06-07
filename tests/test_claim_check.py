@@ -158,6 +158,22 @@ class ClaimCheckTests(unittest.TestCase):
         self.assertEqual(different_result.status, "PARTIAL")
         self.assertEqual(different_result.verdict, "WARN")
 
+    def test_exact_percentage_claim_is_not_supported_by_up_to_upper_bound(self):
+        record = PaperRecord(
+            doi="10.1000/upto",
+            title="Upper bound strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "actuation strain 117%")
+
+        self.assertEqual(result.status, "PARTIAL")
+        self.assertEqual(result.verdict, "WARN")
+        self.assertIn("does not explicitly support", result.reason)
+
     def test_unrelated_strain_percentage_in_same_sentence_does_not_support_claim(self):
         abstracts = (
             (

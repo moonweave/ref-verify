@@ -65,7 +65,7 @@ def _first_string(value: Any) -> str | None:
 
 
 def _published_year(message: dict[str, Any]) -> int | None:
-    for key in ("published-print", "published-online", "published", "issued", "created"):
+    for key in ("published-print", "published-online", "published", "issued"):
         date_parts = message.get(key, {}).get("date-parts")
         if date_parts and date_parts[0]:
             return int(date_parts[0][0])

@@ -27,6 +27,18 @@ class CrossrefTests(unittest.TestCase):
         self.assertEqual(record.journal, "Science")
         self.assertEqual(record.abstract, "Actuated strains up to 117% were demonstrated.")
 
+    def test_does_not_use_created_timestamp_as_publication_year(self):
+        message = {
+            "DOI": "10.1000/created-only",
+            "title": ["Created timestamp is not publication"],
+            "author": [{"family": "Lee", "given": "Jane"}],
+            "created": {"date-parts": [[2020, 1, 1]]},
+        }
+
+        record = parse_crossref_work(message)
+
+        self.assertIsNone(record.year)
+
 
 if __name__ == "__main__":
     unittest.main()

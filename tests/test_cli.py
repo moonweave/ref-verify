@@ -4,6 +4,7 @@ import unittest
 from contextlib import redirect_stdout
 
 from ref_verify.cli import main
+from ref_verify.crossref import parse_crossref_work
 from ref_verify.models import PaperRecord
 
 
@@ -92,6 +93,34 @@ class CliTests(unittest.TestCase):
                 [
                     "verify-doi",
                     "10.1000/missing-year",
+                    "--year",
+                    "2020",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["verdict"], "WARN")
+        self.assertIn("year", payload["mismatches"])
+
+    def test_verify_doi_exits_nonzero_when_crossref_only_has_created_year(self):
+        record = parse_crossref_work(
+            {
+                "DOI": "10.1000/created-only",
+                "title": ["Created timestamp is not publication"],
+                "author": [{"family": "Lee", "given": "Jane"}],
+                "created": {"date-parts": [[2020, 1, 1]]},
+            }
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "verify-doi",
+                    "10.1000/created-only",
                     "--year",
                     "2020",
                     "--json",
