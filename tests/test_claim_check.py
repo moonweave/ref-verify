@@ -182,6 +182,38 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "WARN")
                 self.assertIn("does not explicitly support", result.reason)
 
+    def test_percentage_claim_parses_thousands_separators(self):
+        record = PaperRecord(
+            doi="10.1000/thousands-claim",
+            title="Thousand strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "actuation strain above 1,000%")
+
+        self.assertEqual(result.status, "PARTIAL")
+        self.assertEqual(result.verdict, "WARN")
+        self.assertIn("does not explicitly support", result.reason)
+
+    def test_percentage_evidence_parses_thousands_separators(self):
+        record = PaperRecord(
+            doi="10.1000/thousands-evidence",
+            title="Thousand strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strain reached 1,200% at the tested voltage.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "actuation strain above 1000%")
+
+        self.assertEqual(result.status, "SUPPORTED")
+        self.assertEqual(result.verdict, "ACCEPT")
+        self.assertIn("1,200%", result.evidence)
+
     def test_unrelated_strain_percentage_in_same_sentence_does_not_support_claim(self):
         abstracts = (
             (
@@ -323,6 +355,10 @@ class ClaimCheckTests(unittest.TestCase):
             ("After annealing, actuation strain remained below 50%.", "actuation strain below 50%"),
             ("Actuation strain was below 50% before treatment.", "actuation strain below 50%"),
             ("Actuation strain exceeded 117% in saline solution.", "actuation strain above 100%"),
+            (
+                "Experimentally, under standard conditions, actuation strain exceeded 117%.",
+                "actuation strain above 100%",
+            ),
         )
 
         for abstract, claim in cases:
@@ -361,6 +397,9 @@ class ClaimCheckTests(unittest.TestCase):
             "None showed actuation strain exceeded 117%.",
             "Previous work reported actuation strain above 100% in acrylic films.",
             "According to prior work, actuation strain above 100% was observed.",
+            "These results suggest actuation strain exceeded 117%.",
+            "The paper reports actuation strain exceeded 117%.",
+            "The authors claim actuation strain exceeded 117%.",
         )
 
         for abstract in cases:
@@ -443,6 +482,9 @@ class ClaimCheckTests(unittest.TestCase):
             "We tested whether the device lifetime was 5000 cycles.",
             "Previous work reported the device lifetime was 5000 cycles.",
             "According to Lee, the device lifetime was 5000 cycles.",
+            "These results suggest the device lifetime was 5000 cycles.",
+            "The paper reports the device lifetime was 5000 cycles.",
+            "The authors claim the device lifetime was 5000 cycles.",
             (
                 "We investigated whether, under standard conditions and after "
                 "annealing, the device lifetime was 5000 cycles."

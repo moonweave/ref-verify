@@ -441,6 +441,122 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "PARTIAL")
         self.assertEqual(payload["verdict"], "WARN")
 
+    def test_check_claim_exits_nonzero_for_thousands_separator_claim(self):
+        record = PaperRecord(
+            doi="10.1000/thousands-claim",
+            title="Thousand strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/thousands-claim",
+                    "--claim",
+                    "actuation strain above 1,000%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["verdict"], "WARN")
+
+    def test_check_claim_accepts_thousands_separator_evidence(self):
+        record = PaperRecord(
+            doi="10.1000/thousands-evidence",
+            title="Thousand strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strain reached 1,200% at the tested voltage.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/thousands-evidence",
+                    "--claim",
+                    "actuation strain above 1000%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["verdict"], "ACCEPT")
+        self.assertIn("1,200%", payload["evidence"])
+
+    def test_check_claim_exits_nonzero_for_present_reporting_frame(self):
+        record = PaperRecord(
+            doi="10.1000/present-reporting",
+            title="Present reporting actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="These results suggest actuation strain exceeded 117%.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/present-reporting",
+                    "--claim",
+                    "actuation strain above 100%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["verdict"], "WARN")
+
+    def test_check_claim_exits_nonzero_for_introductory_scoped_percentage(self):
+        record = PaperRecord(
+            doi="10.1000/introductory-scope",
+            title="Introductory scope actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract=(
+                "Experimentally, under standard conditions, "
+                "actuation strain exceeded 117%."
+            ),
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/introductory-scope",
+                    "--claim",
+                    "actuation strain above 100%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["verdict"], "WARN")
+
     def test_check_claim_exits_nonzero_for_non_strain_percentage(self):
         record = PaperRecord(
             doi="10.1000/mixed-quantity",

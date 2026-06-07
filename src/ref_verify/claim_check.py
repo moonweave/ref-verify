@@ -4,6 +4,9 @@ import re
 
 from ref_verify.models import ClaimSupportResult, PaperRecord
 
+_PERCENTAGE_VALUE_PATTERN = r"\d+(?:,\d{3})*(?:\.\d+)?"
+_PERCENTAGE_PATTERN = re.compile(rf"(?<![\d,])({_PERCENTAGE_VALUE_PATTERN})\s*%")
+
 _STOPWORDS = {
     "a",
     "an",
@@ -109,7 +112,9 @@ _UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
     r"\bnone "
     r"(?:show|shows|showed|had|has|have|observed|found|reported|reached|exceeded|met|demonstrated)\b",
     r"\b(?:previous|prior|earlier) (?:work|study|studies|research)\b",
-    r"\b(?:reported|claimed|suggested)\b",
+    r"\b(?:report|reports|reported|reporting)\b",
+    r"\b(?:claim|claims|claimed|claiming)\b",
+    r"\b(?:suggest|suggests|suggested|suggesting)\b",
     r"\bachievable\b",
     r"\bpossible\b",
 )
@@ -196,8 +201,8 @@ def check_claim_support(record: PaperRecord, claim: str) -> ClaimSupportResult:
 
 
 def _claim_percentage_threshold(claim: str) -> float | None:
-    match = re.search(r"(\d+(?:\.\d+)?)\s*%", claim)
-    return float(match.group(1)) if match else None
+    match = _PERCENTAGE_PATTERN.search(claim)
+    return _parse_percentage_value(match.group(1)) if match else None
 
 
 def _claim_percentage_comparator(claim: str) -> str:
@@ -239,10 +244,12 @@ def _sentence_supports_percentage_claim(
     if _has_sentence_scope_prefix(sentence):
         return False
     contexts = _percentage_contexts(sentence)
-    for index, (value, context) in enumerate(contexts):
+    for index, (value, context, percentage_start) in enumerate(contexts):
         if _mentions_prestrain_context(context):
             continue
         if _has_unsupported_claim_frame(context):
+            continue
+        if _has_percentage_scope_prefix(sentence, percentage_start):
             continue
         if _has_percentage_scope_suffix(context):
             continue
@@ -301,14 +308,14 @@ def _compare_percentage(value: float, threshold: float, comparator: str) -> bool
 
 
 def _has_contradictory_percentage_context(
-    contexts: list[tuple[float, str]],
+    contexts: list[tuple[float, str, int]],
     supporting_index: int,
     threshold: float,
     claim_comparator: str,
     claim: str,
     sentence: str,
 ) -> bool:
-    for index, (value, context) in enumerate(contexts):
+    for index, (value, context, _) in enumerate(contexts):
         if index == supporting_index:
             continue
         if _mentions_prestrain_context(context):
@@ -410,20 +417,20 @@ def _sentence_supports_text_claim(sentence: str, claim: str) -> bool:
 
 
 def _all_percentage_evidence_is_prestrain(value: str) -> bool:
-    contexts = [context for _, context in _percentage_contexts(value)]
+    contexts = [context for _, context, _ in _percentage_contexts(value)]
     return bool(contexts) and all(_mentions_prestrain_context(context) for context in contexts)
 
 
-def _percentage_contexts(value: str) -> list[tuple[float, str]]:
-    contexts: list[tuple[float, str]] = []
-    for match in re.finditer(r"(\d+(?:\.\d+)?)\s*%", value):
+def _percentage_contexts(value: str) -> list[tuple[float, str, int]]:
+    contexts: list[tuple[float, str, int]] = []
+    for match in _PERCENTAGE_PATTERN.finditer(value):
         start, end = _clause_bounds(value, match.start(), match.end())
-        contexts.append((float(match.group(1)), value[start:end]))
+        contexts.append((_parse_percentage_value(match.group(1)), value[start:end], match.start()))
     return contexts
 
 
 def _evidence_percentage_comparator(context: str) -> str:
-    percentage = re.search(r"\d+(?:\.\d+)?\s*%", context)
+    percentage = _PERCENTAGE_PATTERN.search(context)
     if not percentage:
         return "exact"
 
@@ -455,11 +462,20 @@ def _has_sentence_scope_prefix(value: str) -> bool:
 
 
 def _has_percentage_scope_suffix(context: str) -> bool:
-    percentage = re.search(r"\d+(?:\.\d+)?\s*%", context)
+    percentage = _PERCENTAGE_PATTERN.search(context)
     if not percentage:
         return False
     suffix_tokens = _phrase_tokens(context[percentage.end() :])
     return any(token in _TEXT_CLAIM_SCOPE_SUFFIXES for token in suffix_tokens)
+
+
+def _has_percentage_scope_prefix(sentence: str, percentage_start: int) -> bool:
+    prefix_tokens = _phrase_tokens(sentence[:percentage_start])
+    return any(token in _TEXT_CLAIM_SCOPE_SUFFIXES for token in prefix_tokens)
+
+
+def _parse_percentage_value(value: str) -> float:
+    return float(value.replace(",", ""))
 
 
 def _clause_bounds(value: str, start: int, end: int) -> tuple[int, int]:
