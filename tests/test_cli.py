@@ -884,6 +884,34 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "PARTIAL")
         self.assertEqual(payload["verdict"], "WARN")
 
+    def test_check_claim_exits_nonzero_for_named_bounded_percentage(self):
+        record = PaperRecord(
+            doi="10.1000/named-bound",
+            title="Named bound actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuation strain was 117% maximum.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/named-bound",
+                    "--claim",
+                    "actuation strain 117%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["verdict"], "WARN")
+
     def test_check_claim_exits_nonzero_for_symbolic_bounded_percentage(self):
         record = PaperRecord(
             doi="10.1000/symbolic-bound",
@@ -902,6 +930,34 @@ class CliTests(unittest.TestCase):
                     "10.1000/symbolic-bound",
                     "--claim",
                     "actuation strain above 100%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["verdict"], "WARN")
+
+    def test_check_claim_exits_nonzero_for_named_bounded_text_claim(self):
+        record = PaperRecord(
+            doi="10.1000/named-bound-text",
+            title="Named bound text actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="The device lifetime was 5000 cycles minimum.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/named-bound-text",
+                    "--claim",
+                    "the device lifetime was 5000 cycles",
                     "--json",
                 ],
                 client=FakeClient(record),

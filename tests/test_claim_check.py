@@ -171,6 +171,10 @@ class ClaimCheckTests(unittest.TestCase):
             "Actuation strain was ≤117%.",
             "Actuation strain was <117%.",
             "Actuation strain was 117%+.",
+            "Actuation strain was 117% minimum.",
+            "Actuation strain was 117% maximum.",
+            "Actuation strain was 117% min.",
+            "Actuation strain was 117% max.",
         )
 
         for abstract in cases:
@@ -589,6 +593,10 @@ class ClaimCheckTests(unittest.TestCase):
         cases = (
             "The device lifetime was 5000 cycles longer after annealing.",
             "The device lifetime was 5000 cycles or more after annealing.",
+            "The device lifetime was 5000 cycles minimum.",
+            "The device lifetime was 5000 cycles maximum.",
+            "The device lifetime was 5000 cycles min.",
+            "The device lifetime was 5000 cycles max.",
         )
 
         for abstract in cases:

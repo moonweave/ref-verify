@@ -49,6 +49,10 @@ _TEXT_CLAIM_COMPARATIVE_SUFFIXES = {
     "less",
     "longer",
     "lower",
+    "max",
+    "maximum",
+    "min",
+    "minimum",
     "more",
     "shorter",
     "than",
@@ -564,9 +568,15 @@ def _evidence_percentage_comparator(context: str, trailing_text: str = "") -> st
         return "lte"
     if stripped_suffix.startswith("+"):
         return "gte"
-    if re.search(r"^\s*[,;:]?\s*(?:or\s+)?(?:more|greater|higher)\b", suffix):
+    if re.search(
+        r"^\s*[,;:]?\s*(?:or\s+)?(?:more|greater|higher|min|minimum)\b",
+        suffix,
+    ):
         return "gte"
-    if re.search(r"^\s*[,;:]?\s*(?:or\s+)?(?:less|fewer|lower)\b", suffix):
+    if re.search(
+        r"^\s*[,;:]?\s*(?:or\s+)?(?:less|fewer|lower|max|maximum)\b",
+        suffix,
+    ):
         return "lte"
     if re.search(r"\bup to\s*$", prefix):
         return "up_to"
