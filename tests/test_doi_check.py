@@ -47,6 +47,27 @@ class DoiCheckTests(unittest.TestCase):
         self.assertEqual(result.verdict, "PASS")
         self.assertEqual(result.mismatches, [])
 
+    def test_rejects_different_group_authors_with_same_suffix(self):
+        provided = CitationInput(
+            doi="10.1000/group-author",
+            title="Consensus statement",
+            first_author="WHO Working Group",
+            year=2024,
+        )
+        fetched = PaperRecord(
+            doi="10.1000/group-author",
+            title="Consensus statement",
+            authors=["Malaria Genomic Epidemiology Network Study Group"],
+            year=2024,
+            abstract=None,
+            source="fixture",
+        )
+
+        result = verify_doi_metadata(provided, fetched)
+
+        self.assertEqual(result.verdict, "REJECT")
+        self.assertIn("first_author", result.mismatches)
+
     def test_rejects_wrong_resolved_paper(self):
         provided = CitationInput(
             doi="10.1000/chapter",

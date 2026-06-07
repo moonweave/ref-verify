@@ -34,6 +34,20 @@ _GREEK_LETTER_NAMES = {
     "\u03c9": "omega",
 }
 
+_GROUP_AUTHOR_TERMS = {
+    "association",
+    "collaboration",
+    "committee",
+    "consortium",
+    "group",
+    "network",
+    "organisation",
+    "organization",
+    "society",
+    "team",
+    "working",
+}
+
 
 def verify_doi_metadata(
     provided: CitationInput,
@@ -123,14 +137,25 @@ def _titles_match(provided: str, fetched: str) -> bool:
 def _author_matches(provided: str, fetched: str | None) -> bool:
     if not fetched:
         return False
-    return _normalize_author(provided) == _normalize_author(fetched)
+    provided_tokens = _author_tokens(provided)
+    fetched_tokens = _author_tokens(fetched)
+    if not provided_tokens or not fetched_tokens:
+        return False
+    if _looks_like_group_author(provided_tokens) or _looks_like_group_author(
+        fetched_tokens,
+    ):
+        return provided_tokens == fetched_tokens
+    return provided_tokens[-1] == fetched_tokens[-1]
 
 
-def _normalize_author(value: str) -> str:
+def _author_tokens(value: str) -> list[str]:
     normalized = _strip_diacritics(value.casefold())
     cleaned = re.sub(r"[^a-z -]", " ", normalized).strip()
-    parts = [part for part in re.split(r"\s+", cleaned) if part]
-    return parts[-1] if parts else ""
+    return [part for part in re.split(r"\s+", cleaned) if part]
+
+
+def _looks_like_group_author(tokens: list[str]) -> bool:
+    return bool(set(tokens) & _GROUP_AUTHOR_TERMS)
 
 
 def _numbers(value: str) -> list[str]:

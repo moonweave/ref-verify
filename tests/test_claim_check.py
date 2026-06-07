@@ -210,6 +210,22 @@ class ClaimCheckTests(unittest.TestCase):
         self.assertEqual(result.verdict, "ACCEPT")
         self.assertIn("117%", result.evidence)
 
+    def test_lower_material_value_does_not_contradict_distinct_higher_material_value(self):
+        record = PaperRecord(
+            doi="10.1000/multimaterial-threshold",
+            title="Multimaterial threshold actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strain reached 80% with silicone and 120% with acrylic.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "actuation strain above 100%")
+
+        self.assertEqual(result.status, "SUPPORTED")
+        self.assertEqual(result.verdict, "ACCEPT")
+        self.assertIn("120%", result.evidence)
+
     def test_partial_when_percentage_is_prestrain_not_actuation_output(self):
         record = PaperRecord(
             doi="10.1000/prestrain",

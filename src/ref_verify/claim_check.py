@@ -340,7 +340,7 @@ def _sentence_supports_percentage_claim(
             percentage_end,
         ):
             continue
-        if not _has_actuation_strain_context(context, claim):
+        if not _has_percentage_subject_context(context, sentence, claim):
             continue
         evidence_comparator = _evidence_percentage_comparator(
             context,
@@ -415,7 +415,7 @@ def _has_contradictory_percentage_context(
             continue
         if not _has_percentage_subject_context(context, sentence, claim):
             continue
-        if claim_comparator == "exact" and _has_distinct_percentage_qualifiers(
+        if _has_distinct_percentage_qualifiers(
             supporting_context,
             context,
         ):
@@ -504,6 +504,8 @@ def _has_percentage_subject_context(context: str, sentence: str, claim: str) -> 
 def _inherits_actuation_strain_subject(context: str, sentence: str, claim: str) -> bool:
     claim_terms = {_stem(token) for token in _tokens(claim)}
     if "actuat" not in claim_terms:
+        return False
+    if _has_non_output_strain_compound(context):
         return False
 
     sentence_terms = {_stem(token) for token in _tokens(sentence)}
