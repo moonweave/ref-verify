@@ -12,6 +12,9 @@ def verify_doi_metadata(
 ) -> MetadataCheckResult:
     mismatches: list[str] = []
 
+    if not _has_comparison_metadata(provided):
+        mismatches.append("metadata")
+
     if provided.title and not _titles_match(provided.title, fetched.title):
         mismatches.append("title")
 
@@ -34,6 +37,9 @@ def verify_doi_metadata(
     elif any(field in mismatches for field in ("title", "first_author")):
         verdict = "REJECT"
         reason = "DOI resolves to a materially different paper than provided."
+    elif "metadata" in mismatches:
+        verdict = "WARN"
+        reason = "No citation metadata was provided to compare against the fetched CrossRef record."
     else:
         verdict = "WARN"
         reason = "DOI resolves, but minor metadata differs from the provided citation."
@@ -45,6 +51,10 @@ def verify_doi_metadata(
         provided=provided,
         fetched=fetched,
     )
+
+
+def _has_comparison_metadata(provided: CitationInput) -> bool:
+    return bool(provided.title or provided.first_author or provided.year is not None)
 
 
 def _titles_match(provided: str, fetched: str) -> bool:

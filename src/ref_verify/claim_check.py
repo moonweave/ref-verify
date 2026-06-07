@@ -23,6 +23,18 @@ _STOPWORDS = {
     "with",
 }
 
+_STRAIN_QUALIFIER_STEMS = {
+    "bend",
+    "bending",
+    "compressive",
+    "compression",
+    "elongation",
+    "shear",
+    "tensile",
+    "torsion",
+    "torsional",
+}
+
 
 def check_claim_support(record: PaperRecord, claim: str) -> ClaimSupportResult:
     if not record.abstract:
@@ -254,6 +266,9 @@ def _has_actuation_strain_context(sentence: str, claim: str) -> bool:
         return False
     if "actuat" in claim_terms:
         return "actuat" in terms
+    claim_qualifiers = claim_terms & _STRAIN_QUALIFIER_STEMS
+    if claim_qualifiers and not claim_qualifiers <= terms:
+        return False
     return True
 
 

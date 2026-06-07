@@ -52,6 +52,8 @@ ref-verify verify-doi <doi> \
   --json
 ```
 
+`verify-doi` exits `0` only for `PASS`; `WARN` and `REJECT` return non-zero. Supplying only a DOI checks that CrossRef resolves but is not enough to pass metadata verification.
+
 Single claim check against a DOI abstract:
 
 ```bash

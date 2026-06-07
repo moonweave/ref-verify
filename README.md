@@ -200,6 +200,8 @@ For the CrossRef metadata portion, use:
 ref-verify verify-doi <doi> --title "<title>" --first-author <last-name> --year <year> --json
 ```
 
+`verify-doi` exits `0` only for `PASS`; `WARN` and `REJECT` return a non-zero exit code so missing or mismatched comparison metadata cannot silently pass automation gates.
+
 **Full Audit** — for searching from scratch or final pre-submission review.
 Fetches the abstract live from CrossRef → Semantic Scholar → Unpaywall → arXiv → PubMed (in order). Checks whether the abstract actually contains the specific claim being cited. Explicitly marks any paper as `UNVERIFIABLE` if no abstract is accessible — never guesses.
 

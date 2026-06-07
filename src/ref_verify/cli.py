@@ -65,7 +65,7 @@ def _verify_doi(args: argparse.Namespace, client: CrossrefClient) -> int:
     )
     result = verify_doi_metadata(provided, fetched)
     _emit(result.to_dict(), as_json=args.json)
-    return 2 if result.verdict == "REJECT" else 0
+    return 0 if result.verdict == "PASS" else 2
 
 
 def _check_claim(args: argparse.Namespace, client: CrossrefClient) -> int:

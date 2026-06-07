@@ -187,6 +187,22 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "WARN")
                 self.assertIn("does not explicitly support", result.reason)
 
+    def test_tensile_strain_claim_is_not_supported_by_actuated_strain_context(self):
+        record = PaperRecord(
+            doi="10.1000/actuated",
+            title="Actuated strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuated strains up to 117% were demonstrated.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "tensile strain above 100%")
+
+        self.assertEqual(result.status, "PARTIAL")
+        self.assertEqual(result.verdict, "WARN")
+        self.assertIn("does not explicitly support", result.reason)
+
     def test_upper_bound_evidence_does_not_support_lower_bound_claim(self):
         cases = (
             (

@@ -50,6 +50,32 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["verdict"], "PASS")
         self.assertEqual(payload["fetched"]["title"], "Dielectric elastomer actuators")
 
+    def test_verify_doi_exits_nonzero_when_no_metadata_is_provided(self):
+        record = PaperRecord(
+            doi="10.1000/example",
+            title="Completely Different Paper",
+            authors=["Wrong"],
+            year=1999,
+            abstract=None,
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "verify-doi",
+                    "10.1000/example",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["verdict"], "WARN")
+        self.assertIn("metadata", payload["mismatches"])
+
     def test_check_claim_outputs_claim_status(self):
         record = PaperRecord(
             doi="10.1000/example",
