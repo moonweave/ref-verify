@@ -60,8 +60,12 @@ _UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
     r"\b(?:did|do|does|is|are|was|were|has|have|had) not\b",
     r"\b(?:didn t|don t|doesn t|isn t|aren t|wasn t|weren t)\b",
     r"\bnever\b",
-    r"\bno (?:sample|samples|specimen|specimens|device|devices|case|cases)\b",
-    r"\bnone of (?:the )?(?:sample|samples|specimen|specimens|device|devices|case|cases)\b",
+    r"\bno "
+    r"(?:sample|samples|specimen|specimens|device|devices|case|cases|paper|papers|study|studies)\b",
+    r"\bnone of (?:the )?"
+    r"(?:sample|samples|specimen|specimens|device|devices|case|cases|paper|papers|study|studies)\b",
+    r"\bnone "
+    r"(?:show|shows|showed|had|has|have|observed|found|reported|reached|exceeded|met|demonstrated)\b",
     r"\b(?:previous|prior|earlier) (?:work|study|studies|research)\b",
     r"\b(?:reported|claimed|suggested)\b",
     r"\bachievable\b",

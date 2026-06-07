@@ -280,6 +280,8 @@ class ClaimCheckTests(unittest.TestCase):
             "Actuation strain exceeded 117% in no sample.",
             "No sample showed actuation strain above 100%.",
             "None of the samples showed actuation strain above 100%.",
+            "None showed actuation strain above 100%.",
+            "None showed actuation strain exceeded 117%.",
             "Previous work reported actuation strain above 100% in acrylic films.",
             "According to prior work, actuation strain above 100% was observed.",
         )
@@ -426,6 +428,8 @@ class ClaimCheckTests(unittest.TestCase):
             "The device lifetime was 5000 cycles in no sample.",
             "No sample had a device lifetime of 5000 cycles.",
             "None of the samples had a device lifetime of 5000 cycles.",
+            "None showed the device lifetime was 5000 cycles.",
+            "None showed that the device lifetime was 5000 cycles.",
         )
 
         for abstract in cases:
