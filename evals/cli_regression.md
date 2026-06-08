@@ -39,15 +39,20 @@ PROGRESS rows that depend on it, never SAFETY rows.)
 
 ## What the corpus encodes (snapshot, latest `main`)
 
-- **1 supported happy path** — `A1` (`>220 °C` entails `>200 °C`): ACCEPT today, must stay.
-- **5 never-accept controls** — `B1` fabricated number, `C1`/`C2` relational, `D1`/`D2`
-  unreachable (Elsevier / old Nature, abstract-only ceiling), `E1` dead DOI.
-- **Gated false-negatives** (target ACCEPT once fixed): `A3` → #14, `B2` → #10,
-  `A2` → #13 **and** #14 (physical-science values are reachable *and* scope-blocked —
-  the two are coupled), `E2` → up-to comparator.
-- **Over-acceptance regression** — `B3`: `>220` evidence currently ACCEPTs an exact
-  `220` claim; target `PARTIAL` once #11 lands. Listed `must_not_accept` so it also
-  guards against the bug regressing.
+```
+SAFETY: 12/12 ok  |  PROGRESS pending: 3
+Pending: A2-bellucci-30C, B2-diez-200g, E2-pelrine-117
+```
+
+- **Supported happy paths** — `A1` (`>220 °C` entails `>200 °C`) and `A3` (`1.7 eV`,
+  unblocked once #14 landed) ACCEPT and must stay green.
+- **Never-accept controls (all PASS)** — `B1` fabricated number, `C1`/`C2` relational,
+  `D1`/`D2` unreachable (Elsevier / old Nature, abstract-only ceiling), `E1` dead DOI.
+  `B3` (over-acceptance) is now `PARTIAL` after #11 — kept `must_not_accept` so the bug
+  cannot silently regress.
+- **Remaining gated false-negatives** (target ACCEPT once fixed): `B2` → #10,
+  `E2` → up-to comparator, `A2` → residual condition handling (#13 already makes it
+  reachable via OpenAlex, but a trailing `in the range` qualifier still blocks ACCEPT).
 
 The verdict labels for `A2`/`A3`/`B2` were grounded by fetching the live abstracts
 (CrossRef + OpenAlex) and confirming the value appears verbatim; no label asserts

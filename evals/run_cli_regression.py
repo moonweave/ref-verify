@@ -75,6 +75,11 @@ def main() -> int:
         elif row.get("must_not_accept") and accepted:
             klass, note = "SAFETY-FAIL", "must NOT ACCEPT but did"
             safety_failures.append(row["id"])
+        elif row.get("must_not_accept"):
+            # Control row: the only invariant is "never ACCEPT". The exact non-ACCEPT
+            # verdict (UNVERIFIABLE vs PARTIAL) can vary with source availability, so it
+            # is not pinned.
+            klass = "PASS"
         elif verdict != row["expected_verdict"] and status != row["expected_verdict"]:
             gated = ",".join(row.get("gated_on") or []) or "?"
             klass, note = "PENDING", f"want {row['expected_verdict']} after {gated}"
