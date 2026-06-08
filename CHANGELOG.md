@@ -13,6 +13,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 - Added `ref-verify check-file` for JSONL and CSV DOI/claim batch checks.
 - Added fixture-backed numeric claim eval coverage for repeated-use workflows.
+- Added DOI-bound OpenAlex abstract fallback before Semantic Scholar and PubMed.
 
 ### Fixed
 
@@ -21,6 +22,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Treated `estimated to be <value>` as a reported numeric value while keeping predictive `estimated to exceed` frames conservative.
 - Prevented comparative evidence such as `>220 °C` from accepting an exact `220 °C` claim.
 - Allowed physical measurement conditions such as `1.7 eV in the temperature range` and `5 S/m at 1 kHz` without relaxing count-claim scope guards.
+- Separated Semantic Scholar `429` rate limits into `SOURCE_RATE_LIMITED` and retried once before marking the source unavailable.
+- Clarified that `npx skills add` installs the agent skill but does not pip-install the Python CLI.
 
 ## [1.1.2] — 2026-06-08
 
