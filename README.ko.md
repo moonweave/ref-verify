@@ -65,6 +65,8 @@ claim X를 뒷받침하는 논문 3개를 찾고, 각 인용을 검증해줘
 
 - CrossRef 메타데이터 확인: `ref-verify verify-doi`
 - CrossRef abstract 기반 주장 확인: `ref-verify check-claim`
+  - 문장 그대로 드러나는 text claim
+  - efficiency, response rate, actuation strain 같은 subject가 일치하는 percentage claim
 - 에이전트가 읽기 쉬운 JSON 출력
 - `WARN`, `REJECT`, `UNVERIFIABLE` 결과에 대한 non-zero exit code
 

@@ -141,6 +141,35 @@ _GENERIC_PERCENTAGE_QUALIFIER_STEMS = {
     "specimen",
 }
 
+_GENERIC_PERCENTAGE_CLAIM_NON_SUBJECT_STEMS = {
+    "at",
+    "above",
+    "below",
+    "equal",
+    "exceed",
+    "exceeded",
+    "exceeding",
+    "exceeds",
+    "few",
+    "fewer",
+    "greater",
+    "high",
+    "higher",
+    "least",
+    "less",
+    "low",
+    "lower",
+    "more",
+    "most",
+    "no",
+    "not",
+    "percent",
+    "per",
+    "cent",
+    "than",
+    "under",
+}
+
 _UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
     r"\baccording to\b",
     r"\bwhether\b",
@@ -498,7 +527,24 @@ def _has_cross_sentence_contradictory_percentage_context(
 def _has_percentage_subject_context(context: str, sentence: str, claim: str) -> bool:
     if _has_actuation_strain_context(context, claim):
         return True
-    return _inherits_actuation_strain_subject(context, sentence, claim)
+    if _inherits_actuation_strain_subject(context, sentence, claim):
+        return True
+    return _has_generic_percentage_subject_context(context, claim)
+
+
+def _has_generic_percentage_subject_context(context: str, claim: str) -> bool:
+    claim_terms = _generic_percentage_subject_terms(claim)
+    if not claim_terms:
+        return False
+    context_terms = {_stem(token) for token in _tokens(context)}
+    return claim_terms <= context_terms
+
+
+def _generic_percentage_subject_terms(claim: str) -> set[str]:
+    terms = {_stem(token) for token in _tokens(claim)}
+    if "actuat" in terms or "strain" in terms:
+        return set()
+    return terms - _GENERIC_PERCENTAGE_CLAIM_NON_SUBJECT_STEMS
 
 
 def _inherits_actuation_strain_subject(context: str, sentence: str, claim: str) -> bool:

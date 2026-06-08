@@ -771,6 +771,34 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["verdict"], "ACCEPT")
         self.assertIn("1,200%", payload["evidence"])
 
+    def test_check_claim_accepts_matching_generic_percentage_subject(self):
+        record = PaperRecord(
+            doi="10.1000/generic-percentage",
+            title="Generic percentage result",
+            authors=["Lee"],
+            year=2020,
+            abstract="Device efficiency reached 95%.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/generic-percentage",
+                    "--claim",
+                    "device efficiency above 90%",
+                    "--json",
+                ],
+                client=FakeClient(record),
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["verdict"], "ACCEPT")
+
     def test_check_claim_exits_nonzero_for_present_reporting_frame(self):
         record = PaperRecord(
             doi="10.1000/present-reporting",

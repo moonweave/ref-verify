@@ -413,6 +413,57 @@ class ClaimCheckTests(unittest.TestCase):
         self.assertEqual(result.verdict, "ACCEPT")
         self.assertIn("1,200%", result.evidence)
 
+    def test_generic_percentage_claim_is_supported_when_subject_matches(self):
+        cases = (
+            (
+                "Device efficiency reached 95%.",
+                "device efficiency above 90%",
+            ),
+            (
+                "The response rate was 72%.",
+                "response rate above 70%",
+            ),
+            (
+                "The cell viability was 84%.",
+                "cell viability greater than 80%",
+            ),
+            (
+                "The failure rate was 4%.",
+                "failure rate below 10%",
+            ),
+        )
+
+        for abstract, claim in cases:
+            with self.subTest(claim=claim):
+                record = PaperRecord(
+                    doi="10.1000/generic-percentage",
+                    title="Generic percentage result",
+                    authors=["Lee"],
+                    year=2020,
+                    abstract=abstract,
+                    source="fixture",
+                )
+
+                result = check_claim_support(record, claim)
+
+                self.assertEqual(result.status, "SUPPORTED")
+                self.assertEqual(result.verdict, "ACCEPT")
+
+    def test_generic_percentage_claim_requires_matching_subject_context(self):
+        record = PaperRecord(
+            doi="10.1000/mixed-generic-percentage",
+            title="Mixed generic percentage result",
+            authors=["Lee"],
+            year=2020,
+            abstract="Device efficiency reached 80%, and response rate was 95%.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "device efficiency above 90%")
+
+        self.assertEqual(result.status, "PARTIAL")
+        self.assertEqual(result.verdict, "WARN")
+
     def test_unrelated_strain_percentage_in_same_sentence_does_not_support_claim(self):
         abstracts = (
             (

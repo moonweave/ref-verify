@@ -62,6 +62,8 @@ checks that are currently safe to automate directly:
 
 - CrossRef metadata check: `ref-verify verify-doi`
 - CrossRef abstract claim check: `ref-verify check-claim`
+  - literal text claims
+  - subject-matched percentage claims such as efficiency, response rate, or actuation strain
 - JSON output for agent-readable routing
 - Non-zero exit codes for `WARN`, `REJECT`, and `UNVERIFIABLE` results
 
