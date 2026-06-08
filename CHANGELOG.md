@@ -7,6 +7,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.2] — 2026-06-08
+
+### Changed
+
+- Added release automation guardrails for CI, wheel smoke testing, manual live API smoke checks, and PyPI trusted publishing.
+- Updated GitHub Actions workflows to current Node runtime-compatible action versions.
+
 ## [1.1.1] — 2026-06-08
 
 ### Changed
