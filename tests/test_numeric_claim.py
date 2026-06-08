@@ -1,4 +1,6 @@
+import json
 import unittest
+from pathlib import Path
 
 from ref_verify.numeric_claim import check_numeric_claim_support
 
@@ -82,6 +84,24 @@ class NumericClaimTests(unittest.TestCase):
         )
 
         self.assertEqual(result.status, "PARTIAL")
+
+
+class NumericClaimEvalFixtureTests(unittest.TestCase):
+    def test_numeric_claim_eval_fixture(self):
+        fixture = Path(__file__).parent / "fixtures" / "numeric_claim_eval.jsonl"
+        with fixture.open("r", encoding="utf-8") as handle:
+            rows = [json.loads(line) for line in handle if line.strip()]
+
+        self.assertGreaterEqual(len(rows), 7)
+        self.assertEqual(
+            {row["domain"] for row in rows},
+            {"materials", "biomedicine", "machine-learning", "chemistry", "general-science"},
+        )
+
+        for row in rows:
+            with self.subTest(row=row["id"]):
+                result = check_numeric_claim_support(row["abstract"], row["claim"])
+                self.assertEqual(result.status, row["expected_status"], row["why"])
 
 
 if __name__ == "__main__":
