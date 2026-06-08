@@ -794,6 +794,21 @@ class ClaimCheckTests(unittest.TestCase):
                 self.assertEqual(result.verdict, "WARN")
                 self.assertIn("does not explicitly support", result.reason)
 
+    def test_percentage_claim_accepts_estimated_to_be_reported_value(self):
+        record = PaperRecord(
+            doi="10.1000/estimated-value",
+            title="Estimated strain actuator",
+            authors=["Lee"],
+            year=2020,
+            abstract="Actuation strain was estimated to be 117%.",
+            source="fixture",
+        )
+
+        result = check_claim_support(record, "actuation strain 117%")
+
+        self.assertEqual(result.status, "SUPPORTED")
+        self.assertEqual(result.verdict, "ACCEPT")
+
     def test_percentage_claim_rejects_approximate_context(self):
         cases = (
             ("Actuation strain was about 117%.", "actuation strain 117%"),

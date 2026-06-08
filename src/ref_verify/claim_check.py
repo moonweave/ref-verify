@@ -209,7 +209,7 @@ _UNSUPPORTED_CLAIM_FRAME_PATTERNS = (
     r"\bsaid to\b",
     r"\b(?:expect|expects|expected|expecting) to\b",
     r"\b(?:project|projects|projected|projecting) to\b",
-    r"\b(?:estimate|estimates|estimated|estimating) to\b",
+    r"\b(?:estimate|estimates|estimated|estimating) to (?!be\b|equal\b|at\b|about\b)",
     r"\bachievable\b",
     r"\bpossible\b",
 )

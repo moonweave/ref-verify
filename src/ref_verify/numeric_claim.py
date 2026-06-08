@@ -6,12 +6,14 @@ from dataclasses import dataclass
 
 _NUMBER_PATTERN = r"\d+(?:,\d{3})*(?:\.\d+)?"
 _UNIT_PATTERN = (
-    r"(?:mg/ml|mg\/ml|g\/l|per\s+cent|percent|cycles?|patients?|subjects?|"
-    r"samples?|devices?|°c|degc|khz|mhz|mv|kv|ma|mg|ml|kg|mm|cm|nm|hz|"
-    r"%|v|a|c|g|l|m)"
+    r"(?:mg\s*/\s*ml|g\s*/\s*l|(?:g|m|k)?(?:ohm|Ω|Ω)[-·]cm|"
+    r"(?:m|k)?v\s*/\s*(?:mm|cm|m)|(?:m|k)?s\s*/\s*m|"
+    r"per\s+cent|percent|cycles?|patients?|subjects?|samples?|devices?|"
+    r"°c|degc|mev|kev|ev|gpa|mpa|kpa|pa|khz|mhz|mv|kv|ma|"
+    r"mg|ml|kg|mm|cm|nm|hz|%|v|a|c|g|l|m|n|j)"
 )
 _MEASUREMENT_PATTERN = re.compile(
-    rf"(?<![\d,])(?P<value>{_NUMBER_PATTERN})\s*(?P<unit>{_UNIT_PATTERN})(?=$|\W)",
+    rf"(?<![\d,])(?P<value>{_NUMBER_PATTERN})\s*(?P<unit>{_UNIT_PATTERN})(?=$|[^\w/·\-ΩΩ°])",
     re.IGNORECASE,
 )
 
@@ -125,30 +127,48 @@ _UNIT_TERMS = {
     "degc",
     "device",
     "devices",
+    "ev",
     "g",
+    "gohmcm",
+    "gpa",
     "hz",
+    "j",
     "kg",
     "khz",
     "kv",
+    "kvcm",
+    "kvm",
+    "kvmm",
     "l",
     "m",
     "ma",
     "mg",
     "mgml",
+    "mpa",
+    "mvcm",
+    "mvm",
+    "mvmm",
     "mhz",
     "ml",
     "mm",
     "mv",
     "nm",
+    "n",
+    "ohmcm",
+    "pa",
     "patient",
     "patients",
     "per",
     "percent",
     "sample",
     "samples",
+    "sm",
     "subject",
     "subjects",
     "v",
+    "vcm",
+    "vm",
+    "vmm",
 }
 
 
@@ -311,7 +331,10 @@ def _parse_value(value: str) -> float:
 
 
 def _normalize_unit(value: str) -> str:
-    normalized = value.lower().replace(" ", "").replace("/", "")
+    normalized = value.replace("Ω", "ohm").replace("Ω", "ohm").replace("ω", "ohm").lower()
+    normalized = normalized.replace("·", "-")
+    normalized = re.sub(r"\s*/\s*", "/", normalized)
+    normalized = normalized.replace(" ", "")
     if normalized in {"%", "percent"}:
         return "%"
     if normalized in {"°c", "degc", "c"}:

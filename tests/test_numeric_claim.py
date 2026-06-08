@@ -77,6 +77,40 @@ class NumericClaimTests(unittest.TestCase):
 
                 self.assertEqual(result.status, "PARTIAL")
 
+    def test_rejects_composite_unit_as_distinct_from_numerator_unit(self):
+        result = check_numeric_claim_support(
+            "The field strength was 18 MV.",
+            "field strength was 18 MV/m",
+        )
+
+        self.assertEqual(result.status, "PARTIAL")
+
+    def test_accepts_physical_science_units(self):
+        cases = (
+            (
+                "The trap energy was estimated to be 1.7 eV.",
+                "trap energy was 1.7 eV",
+            ),
+            (
+                "The resistivity reached 10 ohm-cm.",
+                "resistivity reached 10 Ω·cm",
+            ),
+            (
+                "The conductivity reached 5 S/m.",
+                "conductivity reached 5 S/m",
+            ),
+            (
+                "The stress reached 120 MPa.",
+                "stress reached 120 MPa",
+            ),
+        )
+
+        for abstract, claim in cases:
+            with self.subTest(claim=claim):
+                result = check_numeric_claim_support(abstract, claim)
+
+                self.assertEqual(result.status, "SUPPORTED")
+
     def test_rejects_missing_subject_binding(self):
         result = check_numeric_claim_support(
             "The device was tested extensively. A 95% response rate was observed.",

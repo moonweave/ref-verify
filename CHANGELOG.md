@@ -14,6 +14,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Added `ref-verify check-file` for JSONL and CSV DOI/claim batch checks.
 - Added fixture-backed numeric claim eval coverage for repeated-use workflows.
 
+### Fixed
+
+- Fixed composite scientific units such as `MV/m` being misread as numerator-only units.
+- Added numeric claim support for common physical-science units such as `eV`, `Ω·cm`, `S/m`, and `MPa`.
+- Treated `estimated to be <value>` as a reported numeric value while keeping predictive `estimated to exceed` frames conservative.
+
 ## [1.1.2] — 2026-06-08
 
 ### Changed
