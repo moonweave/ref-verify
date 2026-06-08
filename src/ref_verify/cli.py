@@ -120,13 +120,13 @@ def _check_file(
         _emit({"error": str(exc)}, as_json=args.json)
         return 1
 
-    results = [
-        BatchRowResult(
-            row=row,
-            payload=_run_claim_check(row.doi, row.claim, row.source, client, fallback_clients),
-        )
-        for row in rows
-    ]
+    results = []
+    for row in rows:
+        try:
+            payload = _run_claim_check(row.doi, row.claim, row.source, client, fallback_clients)
+        except Exception as exc:
+            payload = _row_error_payload(row.claim, exc)
+        results.append(BatchRowResult(row=row, payload=payload))
     payload = batch_payload(results)
     if args.json:
         _emit(payload, as_json=True)
@@ -163,6 +163,19 @@ def _run_claim_check(
 
     result = check_claim_support(lookup_result.record, claim)
     return _claim_payload(result, lookup_result)
+
+
+def _row_error_payload(claim: str, exc: Exception) -> dict:
+    return {
+        "status": "UNVERIFIABLE",
+        "verdict": "WARN",
+        "reason": f"Row could not be checked: {exc}",
+        "evidence": "",
+        "claim": claim,
+        "abstract_source": None,
+        "source_attempts": [],
+        "error_code": "ROW_CHECK_ERROR",
+    }
 
 
 def _claim_payload(result: ClaimSupportResult, lookup_result) -> dict:

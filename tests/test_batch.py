@@ -156,3 +156,28 @@ class BatchParserTests(unittest.TestCase):
             summary,
             BatchSummary(total=3, accept=1, warn=2, reject=0, partial=1, unverifiable=1, failed=0),
         )
+
+    def test_summarize_results_counts_operational_failures(self):
+        results = [
+            BatchRowResult(
+                row=ClaimInputRow(1, "a", "10.1000/a", "claim a", "auto", None),
+                payload={
+                    "verdict": "WARN",
+                    "status": "UNVERIFIABLE",
+                    "error_code": "SOURCE_API_ERROR",
+                },
+            ),
+            BatchRowResult(
+                row=ClaimInputRow(2, "b", "10.1000/b", "claim b", "auto", None),
+                payload={
+                    "verdict": "WARN",
+                    "status": "UNVERIFIABLE",
+                    "error_code": "ROW_CHECK_ERROR",
+                },
+            ),
+        ]
+
+        summary = summarize_results(results)
+
+        self.assertEqual(summary.failed, 2)
+        self.assertEqual(summary.unverifiable, 2)

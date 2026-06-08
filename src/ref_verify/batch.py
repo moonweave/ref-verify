@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 BatchFormat = Literal["jsonl", "csv"]
 _VALID_SOURCES = {"auto", "crossref", "semantic-scholar", "pubmed"}
+_FAILED_ERROR_CODES = {"ROW_CHECK_ERROR", "SOURCE_API_ERROR", "SOURCE_TIMEOUT"}
 
 
 class BatchInputError(ValueError):
@@ -101,7 +102,7 @@ def summarize_results(results: list[BatchRowResult]) -> BatchSummary:
             partial += 1
         if status == "UNVERIFIABLE":
             unverifiable += 1
-        if verdict == "ERROR":
+        if verdict == "ERROR" or str(result.payload.get("error_code", "")) in _FAILED_ERROR_CODES:
             failed += 1
     return BatchSummary(
         total=len(results),

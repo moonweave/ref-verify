@@ -40,6 +40,17 @@ class FailingClient:
         raise self.error
 
 
+class MappingClient:
+    def __init__(self, records, errors=None):
+        self.records = records
+        self.errors = errors or {}
+
+    def fetch_work(self, doi):
+        if doi in self.errors:
+            raise self.errors[doi]
+        return self.records[doi]
+
+
 class FakeAbstractSourceClient:
     def __init__(self, source_name, record=None, status="FOUND", reason=None, raises=None):
         self.source_name = source_name
@@ -2075,6 +2086,61 @@ class CliTests(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 1)
         self.assertIn("Invalid JSON on line 1", payload["error"])
+
+    def test_check_file_preserves_results_when_one_row_raises(self):
+        good = PaperRecord(
+            doi="10.1000/good",
+            title="Good paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        client = MappingClient(
+            {"10.1000/good": good},
+            errors={"10.1000/bad": RuntimeError("upstream failed")},
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.jsonl"
+            path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "id": "good",
+                                "doi": "10.1000/good",
+                                "claim": "The model achieved 95% accuracy.",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "id": "bad",
+                                "doi": "10.1000/bad",
+                                "claim": "The model achieved 95% accuracy.",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--json"],
+                    client=client,
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["summary"]["total"], 2)
+        self.assertEqual(payload["summary"]["accept"], 1)
+        self.assertEqual(payload["summary"]["failed"], 1)
+        self.assertEqual(payload["results"][0]["verdict"], "ACCEPT")
+        self.assertEqual(payload["results"][1]["error_code"], "ROW_CHECK_ERROR")
+        self.assertIn("upstream failed", payload["results"][1]["reason"])
 
 
 if __name__ == "__main__":
