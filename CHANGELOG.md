@@ -19,6 +19,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Fixed composite scientific units such as `MV/m` being misread as numerator-only units.
 - Added numeric claim support for common physical-science units such as `eV`, `Ω·cm`, `S/m`, and `MPa`.
 - Treated `estimated to be <value>` as a reported numeric value while keeping predictive `estimated to exceed` frames conservative.
+- Prevented comparative evidence such as `>220 °C` from accepting an exact `220 °C` claim.
+- Allowed physical measurement conditions such as `1.7 eV in the temperature range` and `5 S/m at 1 kHz` without relaxing count-claim scope guards.
 
 ## [1.1.2] — 2026-06-08
 
