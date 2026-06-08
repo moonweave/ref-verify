@@ -1,7 +1,9 @@
 import io
 import json
+import tempfile
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
 
 from ref_verify.abstract_lookup import AbstractSourceError
 from ref_verify.cli import main
@@ -36,6 +38,17 @@ class FailingClient:
 
     def fetch_work(self, doi):
         raise self.error
+
+
+class MappingClient:
+    def __init__(self, records, errors=None):
+        self.records = records
+        self.errors = errors or {}
+
+    def fetch_work(self, doi):
+        if doi in self.errors:
+            raise self.errors[doi]
+        return self.records[doi]
 
 
 class FakeAbstractSourceClient:
@@ -1878,6 +1891,256 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 2)
         self.assertEqual(payload["status"], "UNVERIFIABLE")
         self.assertEqual(payload["verdict"], "WARN")
+
+    def test_check_claim_still_outputs_same_json_shape_after_helper_extraction(self):
+        record = PaperRecord(
+            doi="10.1000/helper",
+            title="Helper extraction",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/helper",
+                    "--claim",
+                    "The model achieved 95% accuracy.",
+                    "--json",
+                ],
+                client=FakeClient(record),
+                abstract_clients=[],
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["verdict"], "ACCEPT")
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["error_code"], "CLAIM_SUPPORTED")
+        self.assertEqual(payload["abstract_source"], "crossref")
+        self.assertIn("source_attempts", payload)
+
+    def test_check_file_jsonl_outputs_json_summary(self):
+        record = PaperRecord(
+            doi="10.1000/batch",
+            title="Batch paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.jsonl"
+            path.write_text(
+                json.dumps(
+                    {
+                        "id": "c1",
+                        "doi": "10.1000/batch",
+                        "claim": "The model achieved 95% accuracy.",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--json"],
+                    client=FakeClient(record),
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["summary"]["total"], 1)
+        self.assertEqual(payload["summary"]["accept"], 1)
+        self.assertEqual(payload["results"][0]["id"], "c1")
+        self.assertEqual(payload["results"][0]["verdict"], "ACCEPT")
+
+    def test_check_file_jsonl_exits_two_when_any_claim_warns(self):
+        record = PaperRecord(
+            doi="10.1000/batch-warn",
+            title="Batch warning",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 90% accuracy.",
+            source="fixture",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.jsonl"
+            path.write_text(
+                json.dumps(
+                    {
+                        "doi": "10.1000/batch-warn",
+                        "claim": "The model achieved 95% accuracy.",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--json"],
+                    client=FakeClient(record),
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["summary"]["warn"], 1)
+        self.assertEqual(payload["results"][0]["status"], "PARTIAL")
+
+    def test_check_file_csv_outputs_human_summary(self):
+        record = PaperRecord(
+            doi="10.1000/csv",
+            title="CSV paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The experiment was conducted at 37 °C.",
+            source="fixture",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.csv"
+            path.write_text(
+                "id,doi,claim\n"
+                "temp,10.1000/csv,The experiment was conducted at 37 °C.\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path)],
+                    client=FakeClient(record),
+                    abstract_clients=[],
+                )
+
+        text = output.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Summary: total=1 accept=1", text)
+        self.assertIn("ACCEPT  temp  10.1000/csv", text)
+        self.assertIn("Claim: The experiment was conducted at 37 °C.", text)
+
+    def test_check_file_accepts_format_override(self):
+        record = PaperRecord(
+            doi="10.1000/override",
+            title="Override paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The study included 12 patients.",
+            source="fixture",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.txt"
+            path.write_text(
+                json.dumps(
+                    {
+                        "doi": "10.1000/override",
+                        "claim": "The study included 12 patients.",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--format", "jsonl", "--json"],
+                    client=FakeClient(record),
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["summary"]["accept"], 1)
+
+    def test_check_file_invalid_input_returns_json_error(self):
+        record = PaperRecord(
+            doi="10.1000/error",
+            title="Error paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.jsonl"
+            path.write_text("{bad json}\n", encoding="utf-8")
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--json"],
+                    client=FakeClient(record),
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertIn("Invalid JSON on line 1", payload["error"])
+
+    def test_check_file_preserves_results_when_one_row_raises(self):
+        good = PaperRecord(
+            doi="10.1000/good",
+            title="Good paper",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        client = MappingClient(
+            {"10.1000/good": good},
+            errors={"10.1000/bad": RuntimeError("upstream failed")},
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "claims.jsonl"
+            path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "id": "good",
+                                "doi": "10.1000/good",
+                                "claim": "The model achieved 95% accuracy.",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "id": "bad",
+                                "doi": "10.1000/bad",
+                                "claim": "The model achieved 95% accuracy.",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                exit_code = main(
+                    ["check-file", str(path), "--json"],
+                    client=client,
+                    abstract_clients=[],
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(payload["summary"]["total"], 2)
+        self.assertEqual(payload["summary"]["accept"], 1)
+        self.assertEqual(payload["summary"]["failed"], 1)
+        self.assertEqual(payload["results"][0]["verdict"], "ACCEPT")
+        self.assertEqual(payload["results"][1]["error_code"], "ROW_CHECK_ERROR")
+        self.assertIn("upstream failed", payload["results"][1]["reason"])
 
 
 if __name__ == "__main__":
