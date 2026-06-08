@@ -57,6 +57,8 @@ formatting, and citation style questions.
 
 The skill is the agent workflow. The Python CLI is the skill-level execution engine that the installed skill can call from a terminal.
 
+The Python package is CLI-only. It does not install `SKILL.md`; install the agent skill from GitHub with `npx skills add` as shown above.
+
 This is a skill/plugin-level workflow, not an MCP server. The CLI covers the
 checks that are currently safe to automate directly:
 
@@ -70,6 +72,10 @@ checks that are currently safe to automate directly:
 - Non-zero exit codes for `WARN`, `REJECT`, and `UNVERIFIABLE` results
 
 Statistical metrics such as p-values, AUC/AUROC, F1 score, hazard ratio, odds ratio, and confidence intervals still use the manual skill protocol. DOI landing-page checks still use the skill protocol. Still handled by the skill protocol: Unpaywall, arXiv, two-source existence checks, and retraction checks remain in `SKILL.md`.
+
+The CLI has zero third-party Python runtime dependencies, but it is not an
+offline verifier. Functional checks require outbound HTTPS access to public
+academic APIs such as CrossRef, Semantic Scholar, and PubMed.
 
 Install the CLI from a local checkout:
 

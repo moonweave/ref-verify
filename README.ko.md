@@ -60,6 +60,9 @@ claim X를 뒷받침하는 논문 3개를 찾고, 각 인용을 검증해줘
 스킬이 에이전트 워크플로우입니다. Python CLI는 설치된 스킬이 터미널에서
 호출할 수 있는 skill-level execution engine입니다.
 
+Python 패키지는 CLI 전용입니다. `SKILL.md`를 설치하지 않습니다. 에이전트
+스킬은 위의 `npx skills add` 명령으로 GitHub에서 설치합니다.
+
 이것은 스킬/플러그인 수준 워크플로우이며 MCP 서버가 아닙니다. CLI는
 현재 직접 자동화해도 안전한 부분만 담당합니다.
 
@@ -75,6 +78,10 @@ claim X를 뒷받침하는 논문 3개를 찾고, 각 인용을 검증해줘
 `p-value`, AUC/AUROC, F1 score, hazard ratio, odds ratio, confidence interval
 같은 통계 지표는 아직 수동 스킬 프로토콜을 따릅니다. DOI landing page 확인은 스킬 프로토콜을 따릅니다. Unpaywall, arXiv, 두 개 이상의 독립 출처로 존재 확인,
 철회 여부 확인도 `SKILL.md`에 있는 스킬 프로토콜이 담당합니다.
+
+CLI에는 third-party Python runtime dependency가 없지만, offline verifier는
+아닙니다. 실제 검증에는 CrossRef, Semantic Scholar, PubMed 같은 공개 학술
+API로 outbound HTTPS 요청을 보낼 수 있어야 합니다.
 
 로컬 체크아웃에서 CLI를 설치합니다.
 

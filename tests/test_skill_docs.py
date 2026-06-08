@@ -132,12 +132,48 @@ class SkillDocsTests(unittest.TestCase):
         readme_ko = (REPO_ROOT / "README.ko.md").read_text(encoding="utf-8")
 
         self.assertIn('readme = "README.md"', pyproject)
+        self.assertIn('requires = ["setuptools>=77"]', pyproject)
+        self.assertIn('license = "MIT"', pyproject)
         self.assertIn(GITHUB_README_URL, readme)
         self.assertIn(GITHUB_KOREAN_README_URL, readme)
         self.assertNotIn("[English](README.md)", readme)
         self.assertNotIn("[한국어](README.ko.md)", readme)
         self.assertNotIn('src=".github/', readme)
         self.assertNotIn('src=".github/', readme_ko)
+
+    def test_python_package_is_documented_as_cli_only(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_ko = (REPO_ROOT / "README.ko.md").read_text(encoding="utf-8")
+
+        self.assertIn("The Python package is CLI-only", readme)
+        self.assertIn("does not install `SKILL.md`", readme)
+        self.assertIn("install the agent skill from GitHub", readme)
+        self.assertIn("Python 패키지는 CLI 전용", readme_ko)
+        self.assertIn("`SKILL.md`를 설치하지 않습니다", readme_ko)
+        self.assertIn("GitHub에서 설치합니다", readme_ko)
+
+    def test_cli_network_requirement_is_explicit(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_ko = (REPO_ROOT / "README.ko.md").read_text(encoding="utf-8")
+        changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+        self.assertIn("zero third-party Python runtime dependencies", readme)
+        self.assertIn("outbound HTTPS access", readme)
+        self.assertIn("CrossRef, Semantic Scholar, and PubMed", readme)
+        self.assertIn("third-party Python runtime dependency", readme_ko)
+        self.assertIn("outbound HTTPS", readme_ko)
+        self.assertIn("CrossRef, Semantic Scholar, PubMed", readme_ko)
+        self.assertIn("zero third-party Python packages", changelog)
+        self.assertIn("outbound HTTPS access", changelog)
+
+    def test_package_version_matches_module_version(self):
+        pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        init = (REPO_ROOT / "src" / "ref_verify" / "__init__.py").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('version = "1.1.1"', pyproject)
+        self.assertIn('__version__ = "1.1.1"', init)
 
     def test_readmes_prioritize_user_workflow_before_architecture_details(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")

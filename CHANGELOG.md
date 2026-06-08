@@ -7,11 +7,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.1] — 2026-06-08
+
+### Changed
+
+- Updated Python packaging metadata to the current SPDX license format.
+- Clarified that zero runtime dependencies means zero third-party Python packages; CLI verification still requires outbound HTTPS access to public academic APIs.
+- Clarified that the Python package is the CLI engine only. Install the agent skill from GitHub with `npx skills add`.
+
 ## [1.1.0] — 2026-06-07
 
 ### Added
 
-- Python package scaffold with zero runtime dependencies.
+- Python package scaffold with zero third-party Python runtime dependencies.
 - `ref-verify verify-doi` CLI for CrossRef-backed DOI metadata checks.
 - `ref-verify check-claim` CLI for abstract-grounded claim support checks.
 - Machine-readable JSON output for downstream manuscript preflight, MCP, and Zotero integrations.
