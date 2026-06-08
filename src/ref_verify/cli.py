@@ -89,9 +89,21 @@ def _check_claim(
     client: CrossrefClient,
     fallback_clients: Sequence[AbstractSourceClient],
 ) -> int:
-    lookup_doi = normalize_doi(args.doi)
-    selected_clients = _select_abstract_clients(fallback_clients, args.source)
-    if args.source in ("auto", "crossref"):
+    payload = _run_claim_check(args.doi, args.claim, args.source, client, fallback_clients)
+    _emit(payload, as_json=args.json)
+    return 0 if payload.get("verdict") == "ACCEPT" else 2
+
+
+def _run_claim_check(
+    doi: str,
+    claim: str,
+    source: str,
+    client: CrossrefClient,
+    fallback_clients: Sequence[AbstractSourceClient],
+) -> dict:
+    lookup_doi = normalize_doi(doi)
+    selected_clients = _select_abstract_clients(fallback_clients, source)
+    if source in ("auto", "crossref"):
         fetched = client.fetch_work(lookup_doi)
         lookup_result = lookup_abstract(lookup_doi, fetched, selected_clients)
     else:
@@ -103,14 +115,12 @@ def _check_claim(
             reason="Fetched DOI does not match the requested DOI.",
             evidence="",
             paper=lookup_result.record,
-            claim=args.claim,
+            claim=claim,
         )
-        _emit(_claim_payload(result, lookup_result), as_json=args.json)
-        return 2
+        return _claim_payload(result, lookup_result)
 
-    result = check_claim_support(lookup_result.record, args.claim)
-    _emit(_claim_payload(result, lookup_result), as_json=args.json)
-    return 0 if result.verdict == "ACCEPT" else 2
+    result = check_claim_support(lookup_result.record, claim)
+    return _claim_payload(result, lookup_result)
 
 
 def _claim_payload(result: ClaimSupportResult, lookup_result) -> dict:

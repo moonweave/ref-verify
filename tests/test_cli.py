@@ -1879,6 +1879,38 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "UNVERIFIABLE")
         self.assertEqual(payload["verdict"], "WARN")
 
+    def test_check_claim_still_outputs_same_json_shape_after_helper_extraction(self):
+        record = PaperRecord(
+            doi="10.1000/helper",
+            title="Helper extraction",
+            authors=["Lee"],
+            year=2024,
+            abstract="The model achieved 95% accuracy.",
+            source="fixture",
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check-claim",
+                    "10.1000/helper",
+                    "--claim",
+                    "The model achieved 95% accuracy.",
+                    "--json",
+                ],
+                client=FakeClient(record),
+                abstract_clients=[],
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["verdict"], "ACCEPT")
+        self.assertEqual(payload["status"], "SUPPORTED")
+        self.assertEqual(payload["error_code"], "CLAIM_SUPPORTED")
+        self.assertEqual(payload["abstract_source"], "crossref")
+        self.assertIn("source_attempts", payload)
+
 
 if __name__ == "__main__":
     unittest.main()
