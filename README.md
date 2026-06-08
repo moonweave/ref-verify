@@ -161,6 +161,44 @@ normal CI does not fail because an upstream API is temporarily unavailable.
 
 ---
 
+## Scope — what it does and does not verify
+
+`ref-verify` is a conservative guard, not an oracle. It errs toward flagging: an
+`ACCEPT` is high-confidence, and **anything else means "not auto-verifiable —
+check it yourself", not "the citation is wrong."**
+
+**It verifies**
+
+- DOI metadata: title, first-author surname, and year against CrossRef.
+- Whether a DOI-bound **abstract** explicitly supports a specific numeric or
+  literal claim, quoted verbatim. If no abstract is reachable, it returns
+  `UNVERIFIABLE` rather than guessing.
+
+**It does not verify** (out of scope by design, not bugs)
+
+- **Full-text, figure, table, or supplementary values** — abstract-only. A number
+  that appears only in the body stays `UNVERIFIABLE`.
+- **Relational or qualitative claims** — proportionalities, mechanisms,
+  "broader/stronger than". Only value+unit and literal claims are checked.
+- **Papers whose publisher withholds the abstract** — some titles expose no
+  abstract to CrossRef or OpenAlex. No abstract → `UNVERIFIABLE`, which reflects
+  reachability, not the claim.
+- **Statistical metrics** (p-value, AUC/AUROC, F1, hazard/odds ratio, confidence
+  intervals) — handled by the manual skill protocol, not the CLI.
+- **Paper quality, novelty, field consensus**, or whether the *full* paper
+  supports a broader statement.
+
+**Reading a verdict**
+
+| Verdict | Meaning |
+|---|---|
+| `ACCEPT` | The fetched abstract explicitly supports the claim. High-confidence pass. |
+| `WARN` / `PARTIAL` | An abstract was read but does not explicitly support the exact claim. Check the source. |
+| `UNVERIFIABLE` | No abstract was reachable to check against. Not a judgment on the claim. |
+| `REJECT` | DOI is dead, resolves to a different paper, contradicted, or retracted. |
+
+---
+
 ## Modes
 
 **Quick Screen** is for DOIs you already have. It uses CrossRef to compare the
