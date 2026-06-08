@@ -143,6 +143,11 @@ PYTHONPATH=src python3 -m ref_verify.cli check-claim 10.1126/science.287.5454.83
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
+릴리즈 안전성 검사는 Python 패키지를 빌드하고, 메타데이터를 확인하고,
+빌드된 wheel을 새 virtualenv에 설치해 본 뒤 배포 경로를 확인합니다. 공개
+학술 API를 실제로 호출하는 live check는 수동 GitHub Actions workflow로
+분리되어 있어, 일반 CI가 upstream API 일시 장애 때문에 실패하지 않습니다.
+
 ---
 
 ## 잡아내는 문제

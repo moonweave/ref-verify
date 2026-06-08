@@ -27,6 +27,33 @@ Test cases live in `evals/evals.json`. A good test case:
 
 See the existing three cases for format reference.
 
+### Run verification locally
+
+Before opening a pull request, run the source tests:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+python3 -m py_compile src/ref_verify/*.py tests/*.py scripts/*.py
+```
+
+For release or packaging changes, also build and smoke-test the package:
+
+```bash
+python3 -m pip install --upgrade build twine
+python3 -m build --sdist --wheel --outdir dist .
+python3 -m twine check dist/*
+version="$(python3 -c 'import re; print(re.search(r"^version = \"([^\"]+)\"", open("pyproject.toml", encoding="utf-8").read(), re.M).group(1))')"
+python3 scripts/package_smoke.py --wheel dist/ref_verify-*.whl --expected-version "$version"
+```
+
+The live API smoke workflow is manual because it calls public academic APIs and
+can fail when an upstream service is slow or unavailable.
+
+The PyPI publish workflow uses trusted publishing. Before publishing from a
+GitHub Release, configure PyPI Trusted Publisher for this repository and the
+GitHub environment named `pypi`; otherwise the release build can pass and the
+final publish step will still fail.
+
 ### Improve the skill
 
 `SKILL.md` is the skill itself — the instructions the agent follows. Improvements should:

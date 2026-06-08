@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-package:
+    name: Test and package (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Run unit tests
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+      - name: Byte-compile Python files
+        run: python -m py_compile src/ref_verify/*.py tests/*.py scripts/*.py
+
+      - name: Build distribution artifacts
+        run: python -m build --sdist --wheel --outdir dist .
+
+      - name: Check distribution metadata
+        run: python -m twine check dist/*
+
+      - name: Smoke-test built wheel
+        shell: bash
+        run: |
+          wheel="$(ls dist/ref_verify-*.whl)"
+          version="$(python -c 'import re; print(re.search(r"^version = \"([^\"]+)\"", open("pyproject.toml", encoding="utf-8").read(), re.M).group(1))')"
+          python scripts/package_smoke.py --wheel "$wheel" --expected-version "$version"

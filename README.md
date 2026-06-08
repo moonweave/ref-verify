@@ -138,6 +138,11 @@ For local development, run:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
+Release safety checks also build the Python package, validate metadata, and
+install the built wheel in a fresh virtualenv before publishing. Live checks
+against public academic APIs are kept in a manual GitHub Actions workflow so
+normal CI does not fail because an upstream API is temporarily unavailable.
+
 ---
 
 ## What it catches
